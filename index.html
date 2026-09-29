@@ -1,0 +1,2376 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Odonto Agenda</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,500;0,600;1,500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* ===== CORES DO APP (mude aqui para afetar tudo que usa essas variáveis) ===== */
+  :root{
+    --bg: #F1F5F2;
+    --surface: #FFFFFF;
+    --ink: #1B2A26;
+    --ink-soft: #5C6E68;
+    --teal: #1E7FBF;
+    --teal-soft: #D8E9F5;
+    --amber: #B8863B;
+    --amber-soft: #F3E7D2;
+    --clay: #8C5A3C;
+    --clay-soft: #EFE2D4;
+    --plum: #74617F;
+    --plum-soft: #E7E1EC;
+    --olive: #6E7A4C;
+    --olive-soft: #E7EBDB;
+    --line: #DCE3DF;
+    --danger: #A2483A;
+  }
+  *{box-sizing:border-box;}
+  body{
+    -webkit-user-select:none;
+    user-select:none;
+    -webkit-tap-highlight-color:transparent;
+  }
+  input, textarea, select{
+    -webkit-user-select:text;
+    user-select:text;
+  }
+
+  /* ===== FEEDBACK DE TOQUE (escurece levemente ao tocar em qualquer botão/card) ===== */
+  button:active{ filter:brightness(0.9); }
+  .card:active{ filter:brightness(0.96); }
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'IBM Plex Sans', sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{
+    max-width:640px;
+    margin:0 auto;
+    padding:20px 20px 90px;
+  }
+
+  /* Perfil */
+  .profile-bar{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:12px 14px;
+    margin-bottom:20px;
+    cursor:pointer;
+  }
+  .avatar{
+    width:48px;
+    height:48px;
+    border-radius:50%;
+    background:var(--teal-soft);
+    color:var(--teal);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:600;
+    font-size:18px;
+    flex-shrink:0;
+    overflow:hidden;
+  }
+  .avatar img{ width:100%; height:100%; object-fit:cover; }
+  .profile-info{ min-width:0; }
+  .profile-name{
+    margin:0;
+    font-weight:600;
+    font-size:15px;
+    color:var(--ink);
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .profile-id{
+    margin:2px 0 0;
+    font-size:12px;
+    color:var(--ink-soft);
+  }
+
+  /* ===== BANNER DA CLÍNICA (16:9, clicável) ===== */
+  .estab-banner{
+    width:100%;
+    aspect-ratio:16 / 9;
+    border-radius:14px;
+    background:var(--teal-soft);
+    border:1px solid var(--teal);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    margin-bottom:20px;
+    overflow:hidden;
+    position:relative;
+  }
+  .estab-banner img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+  }
+  .estab-dica{
+    font-size:12px;
+    color:var(--ink-soft);
+    margin:6px 0;
+  }
+  #estabBannerVazio{
+    color:var(--teal);
+    font-size:13px;
+    font-weight:600;
+    text-align:center;
+    padding:0 16px;
+  }
+
+  /* ===== TÍTULO "AGENDA MÉDICA" (topo da tela) ===== */
+  .app-title{
+    font-family:'Lora', serif;
+    font-weight:700;
+    font-size:22px;
+    color:var(--teal);
+    text-align:left;
+    margin:0 0 16px;
+  }
+  .app-signature{
+    font-family:'Lora', serif;
+    font-weight:700;
+    font-size:16px;
+    color:var(--ink-soft);
+    text-align:left;
+    margin:8px 0 16px;
+  }
+
+  /* ===== BOTÃO "← VOLTAR" (aparece só dentro da tela de um familiar) ===== */
+  .familiar-bar{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:20px;
+  }
+  .back-btn{
+    background:none;
+    border:none;
+    color:var(--teal);
+    font-size:14px;
+    font-family:'IBM Plex Sans', sans-serif;
+    cursor:pointer;
+    padding:0;
+  }
+  .familiar-nome-atual{
+    font-size:14px;
+    font-weight:600;
+    color:var(--ink);
+    flex:1;
+  }
+
+  /* ===== RÓTULO "FAMÍLIA:" (linha acima dos chips de familiares) ===== */
+  .family-label{
+    font-size:16px;
+    color:var(--ink-soft);
+    font-weight:600;
+    margin:0;
+  }
+  .family-label-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:8px;
+  }
+
+  /* ===== BOTÃO "COMO USAR" (mesma linha do rótulo "Família:") ===== */
+  .how-to-btn{
+    background:none;
+    border:none;
+    font-size:16px;
+    font-weight:600;
+    color:var(--teal);
+    font-family:'IBM Plex Sans', sans-serif;
+    cursor:pointer;
+    padding:0;
+  }
+
+  /* ===== FILEIRA DE CHIPS DE FAMILIARES (rolável horizontalmente) ===== */
+  .people-row{
+    display:flex;
+    gap:8px;
+    overflow-x:auto;
+    white-space:nowrap;
+    margin-bottom:20px;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:none;
+  }
+  .people-row::-webkit-scrollbar{ display:none; }
+
+  /* Estilo base de cada chip (nome do familiar) */
+  .person-chip{
+    flex-shrink:0;
+    padding:8px 16px;
+    border-radius:20px;
+    border:1px solid var(--line);
+    background:var(--surface);
+    font-size:13px;
+    color:var(--ink-soft);
+    cursor:pointer;
+    font-family:'IBM Plex Sans', sans-serif;
+  }
+  /* Chip do familiar/titular selecionado no momento */
+  .person-chip.active{
+    background:var(--teal-soft);
+    border-color:var(--teal);
+    color:var(--teal);
+    font-weight:600;
+  }
+  /* Só o sinal "+" de adicionar familiar (tamanho independente dos nomes) */
+  .person-chip.add{
+    color:var(--teal);
+    font-weight:700;
+    font-size:20px;
+    border-style:dashed;
+  }
+
+  header{ margin-bottom:22px; }
+  header h2.app-subtitle{
+    font-family:'Lora', serif;
+    font-weight:600;
+    font-size:17px;
+    color:var(--teal);
+    margin:0 0 4px;
+  }
+  header p{
+    margin:0;
+    color:var(--ink-soft);
+    font-size:14px;
+  }
+  /* Frase de destaque "App funciona sem internet" — ajuste o font-size aqui à vontade */
+  .offline-badge{
+    margin:6px 0 0;
+    font-weight:700;
+    font-size:13px;
+    color:var(--teal);
+  }
+
+  /* ===== ABAS (Próximos / Concluídos / Pendentes / Prioridades) ===== */
+  .tabs{
+    display:flex;
+    gap:4px;
+    margin-bottom:20px;
+    border-bottom:1px solid var(--line);
+    overflow-x:auto;
+    white-space:nowrap;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:none;
+  }
+  .tabs::-webkit-scrollbar{ display:none; }
+  .tab{
+    border:none;
+    background:none;
+    font-family:'IBM Plex Sans', sans-serif;
+    font-size:14px;
+    color:var(--ink-soft);
+    padding:10px 4px;
+    margin-right:14px;
+    cursor:pointer;
+    border-bottom:2px solid transparent;
+    position:relative;
+    top:1px;
+    flex-shrink:0;
+  }
+  .tab.active{
+    color:var(--teal);
+    border-bottom:2px solid var(--teal);
+    font-weight:500;
+  }
+
+  /* ===== CARD DE CADA COMPROMISSO NA LISTA ===== */
+  .card{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:16px 18px;
+    margin-bottom:12px;
+  }
+  .card.done{ opacity:0.55; }
+  .card-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:12px;
+  }
+  .card-title{
+    font-weight:600;
+    font-size:16px;
+    margin:0 0 2px;
+  }
+  .card-sub{
+    font-size:13px;
+    color:var(--ink-soft);
+    margin:0;
+  }
+  /* Etiqueta colorida do tipo (Consulta/Exame/Outros) dentro do card */
+  .badge{
+    font-size:11px;
+    padding:3px 9px;
+    border-radius:20px;
+    white-space:nowrap;
+    font-weight:500;
+  }
+  .badge-servico{ background:var(--teal-soft); color:var(--teal); }
+  .card-num{
+    margin:5px 0 0;
+    font-size:11px;
+    color:var(--ink-soft);
+  }
+
+  .card-date{
+    margin-top:10px;
+    font-size:14px;
+    color:var(--ink);
+    display:flex;
+    align-items:baseline;
+    gap:6px;
+  }
+  .card-date strong{ font-family:'Lora', serif; }
+  .card-notes{
+    margin-top:8px;
+    font-size:13px;
+    color:var(--ink-soft);
+    line-height:1.4;
+  }
+  /* ===== MENU DE AÇÕES (abre ao tocar num compromisso) ===== */
+  .card{ cursor:pointer; }
+  .action-list{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+  .action-btn{
+    width:100%;
+    text-align:left;
+    padding:14px 16px;
+    border-radius:8px;
+    border:1px solid var(--line);
+    background:var(--bg);
+    font-family:'IBM Plex Sans', sans-serif;
+    font-size:14px;
+    color:var(--ink);
+    cursor:pointer;
+  }
+  .action-btn.primary{ color:var(--teal); border-color:var(--teal); }
+  .action-btn.danger{ color:var(--danger); border-color:var(--danger); }
+
+  .empty{
+    text-align:center;
+    padding:48px 20px;
+    color:var(--ink-soft);
+  }
+  .empty p{ margin:6px 0 0; font-size:14px; }
+
+  .fab-group{
+    position:fixed;
+    bottom:24px;
+    right:24px;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+    align-items:center;
+  }
+  .fab, .fab-secondary{
+    border:none;
+    cursor:pointer;
+    box-shadow:0 4px 14px rgba(30,74,68,0.3);
+  }
+  .fab{
+    width:56px;
+    height:56px;
+    border-radius:50%;
+    background:var(--teal);
+    color:#fff;
+    font-size:28px;
+    line-height:56px;
+    text-align:center;
+  }
+  .fab-secondary{
+    width:44px;
+    height:44px;
+    border-radius:50%;
+    background:var(--surface);
+    color:var(--teal);
+    border:1px solid var(--line);
+    font-size:18px;
+    line-height:42px;
+    text-align:center;
+  }
+
+  /* ===== ESTRUTURA GERAL DE TODOS OS MODAIS (fundo escuro + painel branco) ===== */
+  .overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(27,42,38,0.4);
+    display:flex;
+    align-items:flex-end;
+    justify-content:center;
+    z-index:10;
+  }
+  .sheet{
+    background:var(--surface);
+    width:100%;
+    max-width:640px;
+    border-radius:16px 16px 0 0;
+    padding:24px 20px 28px;
+    max-height:88vh;
+    overflow-y:auto;
+  }
+  .sheet h2{
+    font-family:'Lora', serif;
+    font-size:20px;
+    color:var(--teal);
+    margin:0 0 18px;
+  }
+  .field{ margin-bottom:14px; }
+  .field label{
+    display:block;
+    font-size:12px;
+    color:var(--ink-soft);
+    margin-bottom:5px;
+  }
+  .field input, .field select, .field textarea{
+    width:100%;
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:10px 12px;
+    font-family:'IBM Plex Sans', sans-serif;
+    font-size:14px;
+    color:var(--ink);
+    background:var(--bg);
+  }
+  .field textarea{ resize:vertical; min-height:56px; }
+  .row2{ display:flex; gap:10px; }
+  .row2 .field{ flex:1; }
+
+  /* ===== SELETOR DE HORA (dropdowns hora/minuto, dentro do formulário) ===== */
+  .time-picker{
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .time-picker select{
+    flex:1;
+    text-align:center;
+  }
+  .time-picker span{ color:var(--ink-soft); font-weight:600; }
+
+  /* ===== BOTÕES DE TIPO DE SERVIÇO (editáveis) NO FORMULÁRIO ===== */
+  .type-toggle{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-bottom:16px;
+  }
+  .type-toggle button{
+    flex:1 1 30%;
+    padding:10px 4px;
+    border-radius:8px;
+    border:1px solid var(--line);
+    background:var(--bg);
+    font-family:'IBM Plex Sans', sans-serif;
+    font-size:13px;
+    cursor:pointer;
+    color:var(--ink-soft);
+  }
+  .type-toggle button.active.tipo1{ background:var(--teal-soft); border-color:var(--teal); color:var(--teal); }
+  .type-toggle button.active.tipo2{ background:var(--amber-soft); border-color:var(--amber); color:var(--amber); }
+  .type-toggle button.active.tipo3{ background:var(--clay-soft); border-color:var(--clay); color:var(--clay); }
+  .type-toggle button.active.tipo4{ background:var(--plum-soft); border-color:var(--plum); color:var(--plum); }
+  .type-toggle button.active.tipo5{ background:var(--olive-soft); border-color:var(--olive); color:var(--olive); }
+
+  .sheet-actions{
+    display:flex;
+    gap:10px;
+    margin-top:8px;
+  }
+  .sheet-actions button{
+    flex:1;
+    padding:12px;
+    border-radius:8px;
+    border:none;
+    font-family:'IBM Plex Sans', sans-serif;
+    font-size:14px;
+    font-weight:500;
+    cursor:pointer;
+  }
+  .btn-cancel{ background:var(--bg); color:var(--ink-soft); }
+  .btn-save{ background:var(--teal); color:#fff; }
+
+  /* ===== TELA DE CALENDÁRIO ===== */
+  .calendar-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:16px;
+  }
+  .calendar-header h2{
+    margin:0;
+    font-family:'Lora', serif;
+    font-size:18px;
+    color:var(--teal);
+  }
+  .cal-nav{
+    background:none;
+    border:none;
+    font-size:22px;
+    color:var(--teal);
+    cursor:pointer;
+    padding:4px 12px;
+  }
+  .calendar-grid{
+    display:grid;
+    grid-template-columns:repeat(7, minmax(0, 1fr));
+    grid-auto-rows:38px;
+    gap:3px;
+  }
+  .cal-weekday{
+    font-size:11px;
+    color:var(--ink-soft);
+    text-align:center;
+    padding:4px 0;
+    font-weight:600;
+  }
+  .cal-day{
+    height:38px;
+    min-width:0;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    border-radius:8px;
+    font-size:12px;
+    color:var(--ink);
+    cursor:pointer;
+    background:var(--bg);
+  }
+  .cal-day.empty{ background:none; cursor:default; }
+  .cal-day.today{ border:1px solid var(--teal); font-weight:700; }
+  .cal-dots{
+    display:flex;
+    gap:2px;
+    margin-top:2px;
+    min-height:5px;
+  }
+  .cal-dot{
+    width:5px;
+    height:5px;
+    border-radius:50%;
+  }
+  .cal-day-item{
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+    padding:10px 0;
+    border-bottom:1px solid var(--line);
+  }
+  .cal-day-item:last-child{ border-bottom:none; }
+  .cal-day-dot{
+    width:10px;
+    height:10px;
+    border-radius:50%;
+    margin-top:4px;
+    flex-shrink:0;
+  }
+
+  /* ===== TEXTO DA TELA "COMO USAR" ===== */
+  .how-to-content{
+    max-height:60vh;
+    overflow-y:auto;
+    margin-bottom:16px;
+  }
+  .how-to-content p{
+    font-size:14px;
+    color:var(--ink);
+    line-height:1.5;
+    margin:0 0 16px;
+  }
+  .how-to-content strong{ color:var(--teal); }
+
+  /* ===== TOAST (mensagem rápida que aparece e some sozinha) ===== */
+  .toast{
+    position:fixed;
+    left:50%;
+    bottom:100px;
+    transform:translateX(-50%);
+    background:var(--teal);
+    color:#fff;
+    padding:10px 18px;
+    border-radius:8px;
+    font-size:13px;
+    z-index:20;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity 0.25s ease;
+  }
+  .toast.show{ opacity:1; }
+
+  /* ===== EDITOR DE FOTO DE PERFIL (usado no titular e nos familiares) ===== */
+  .avatar-edit{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:10px;
+    margin-bottom:20px;
+  }
+  .avatar-large{
+    width:88px;
+    height:88px;
+    border-radius:50%;
+    background:var(--teal-soft);
+    color:var(--teal);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:600;
+    font-size:30px;
+    overflow:hidden;
+  }
+  .avatar-large img{ width:100%; height:100%; object-fit:cover; }
+  .btn-photo{
+    font-size:13px;
+    color:var(--teal);
+    text-decoration:underline;
+    cursor:pointer;
+  }
+  .profile-id-preview{
+    text-align:center;
+    font-size:12px;
+    color:var(--ink-soft);
+    margin:-6px 0 16px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1 class="app-title" id="appTitle">Odonto Agenda</h1>
+
+  <div class="estab-banner" id="estabBanner">
+    <span id="estabBannerVazio">Toque para cadastrar sua clínica</span>
+    <img id="estabBannerImg" style="display:none;">
+  </div>
+  <p class="app-signature" id="appSignature" style="display:none;">Odonto Agenda</p>
+
+  <div class="familiar-bar" id="familiarBar" style="display:none;">
+    <button class="back-btn" id="btnVoltar">← Voltar</button>
+    <span class="familiar-nome-atual" id="familiarNomeAtual"></span>
+    <button class="how-to-btn" id="btnEditarPerfilFamiliar">Editar perfil</button>
+  </div>
+
+  <header>
+    <h2 class="app-subtitle">Meus Atendimentos</h2>
+    <p>Consultas e procedimentos odontológicos, em um só lugar</p>
+    <p class="offline-badge">App funciona sem internet</p>
+  </header>
+
+  <div class="family-section" id="familySection">
+    <div class="family-label-row">
+      <p class="family-label">Família:</p>
+      <button class="how-to-btn" id="btnGear" title="Menu">⚙️</button>
+    </div>
+    <div class="people-row" id="peopleRow">
+      <button class="person-chip add" id="addPersonBtn">+</button>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="proximos">Próximos</button>
+    <button class="tab" data-tab="concluidos">Concluídos</button>
+    <button class="tab" data-tab="pendentes">Pendentes</button>
+    <button class="tab" data-tab="especiais">Prioridades</button>
+  </div>
+
+  <div id="list"></div>
+</div>
+
+<div class="fab-group">
+  <button class="fab-secondary" id="fabShare" aria-label="Compartilhar como imagem">⇪</button>
+  <button class="fab" id="fabAdd" aria-label="Adicionar compromisso">+</button>
+</div>
+
+<!-- Modal de compromisso -->
+<div class="overlay" id="overlay" style="display:none;">
+  <div class="sheet">
+    <h2 id="sheetTitle">Novo compromisso</h2>
+    <div class="field">
+      <label for="fTipoServico">Procedimento</label>
+      <input id="fTipoServico" placeholder="Ex: Limpeza, Canal, Restauração...">
+    </div>
+    <div class="field">
+      <label for="fTitulo">Profissional</label>
+      <input id="fTitulo" placeholder="Ex: Dr. Souza">
+    </div>
+    <div class="field">
+      <label>Data</label>
+      <div class="time-picker">
+        <select id="fDia"></select>
+        <span>/</span>
+        <select id="fMes"></select>
+        <span>/</span>
+        <select id="fAno"></select>
+      </div>
+    </div>
+    <div class="field">
+      <label>Hora</label>
+      <div class="time-picker">
+        <select id="fHoraH"></select>
+        <span>:</span>
+        <select id="fHoraM"></select>
+      </div>
+    </div>
+    <div class="field">
+      <label for="fLocal">Especialidade</label>
+      <input id="fLocal" placeholder="Ex: Ortodontia, Endodontia">
+    </div>
+    <div class="field">
+      <label for="fNotas">Observações (opcional)</label>
+      <textarea id="fNotas" placeholder="Ex: Trazer radiografia anterior"></textarea>
+    </div>
+    <div class="sheet-actions">
+      <button class="btn-cancel" id="btnCancel">Cancelar</button>
+      <button class="btn-save" id="btnSave">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de perfil -->
+<div class="overlay" id="profileOverlay" style="display:none;">
+  <div class="sheet">
+    <div id="profileMainView">
+      <h2>Seu perfil</h2>
+      <div class="avatar-edit">
+        <div class="avatar-large" id="avatarLargeWrap">
+          <img id="avatarLargeImg" style="display:none">
+          <span id="avatarLargeInitial">?</span>
+        </div>
+        <label class="btn-photo" for="fFoto">Escolher foto</label>
+        <input type="file" id="fFoto" accept="image/*" style="display:none">
+      </div>
+      <div class="field">
+        <label for="fNome">Nome</label>
+        <input id="fNome" placeholder="Seu nome">
+      </div>
+      <p class="profile-id-preview" id="profileIdPreview"></p>
+      <button class="action-btn danger" id="btnDeleteFamiliar" style="display:none; margin-bottom:16px;">Excluir familiar</button>
+      <div class="sheet-actions">
+        <button class="btn-cancel" id="btnProfileCancel">Cancelar</button>
+        <button class="btn-save" id="btnProfileSave">Salvar</button>
+      </div>
+    </div>
+    <div id="profileDeleteConfirmView" style="display:none;">
+      <h2 id="profileDeleteTitle">Excluir familiar?</h2>
+      <p style="color:var(--ink-soft); font-size:14px; margin:0 0 20px;">Isso vai excluir o cadastro e todos os agendamentos dessa pessoa. Deseja continuar?</p>
+      <div class="sheet-actions">
+        <button class="btn-cancel" id="btnDeleteFamiliarCancel">Cancelar</button>
+        <button class="btn-save" style="background:var(--danger);" id="btnDeleteFamiliarConfirm">Excluir</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Menu da engrenagem -->
+<div class="overlay" id="gearMenuOverlay" style="display:none;">
+  <div class="sheet">
+    <h2>Menu</h2>
+    <div class="action-list">
+      <button class="action-btn primary" id="gearCalendario">Calendário</button>
+      <button class="action-btn" id="gearComoUsar">Como usar</button>
+      <button class="action-btn" id="gearDiaSemana">Dia da semana</button>
+      <button class="action-btn" id="gearBackup">Backup</button>
+    </div>
+    <div class="sheet-actions" style="margin-top:16px;">
+      <button class="btn-cancel" id="btnGearCancel">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Tela de visualização do estabelecimento -->
+<div class="overlay" id="estabInfoOverlay" style="display:none;">
+  <div class="sheet">
+    <h2>Sua clínica</h2>
+    <div class="estab-banner" id="estabInfoBannerWrap" style="cursor:default; margin-bottom:16px;">
+      <span id="estabInfoBannerVazio">Sem banner cadastrado</span>
+      <img id="estabInfoBannerImg" style="display:none;">
+    </div>
+    <p style="margin:0 0 4px; font-weight:600; font-size:16px;" id="estabInfoNome"></p>
+    <p style="margin:0 0 4px; font-size:13px; color:var(--ink-soft);" id="estabInfoEndereco"></p>
+    <p style="margin:0 0 16px; font-size:13px; color:var(--ink-soft);" id="estabInfoTelefone"></p>
+    <div class="action-list">
+      <button class="action-btn primary" id="btnEstabEditar">Editar</button>
+      <button class="action-btn" id="btnEstabCompartilhar">Compartilhar</button>
+    </div>
+    <div class="sheet-actions" style="margin-top:16px;">
+      <button class="btn-cancel" id="btnEstabInfoClose" style="flex:none; width:100%;">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Tela Estabelecimento (edição) -->
+<div class="overlay" id="estabelecimentoOverlay" style="display:none;">
+  <div class="sheet">
+    <h2>Editar clínica</h2>
+    <div class="field">
+      <label>Banner (proporção 16:9) - Tamanho 1280x720.</label>
+      <p class="estab-dica" id="estabDicaAcima">Coloque: Nome, Rua, CEP e Telefone.</p>
+      <div class="estab-banner" id="estabBannerEditWrap" style="margin-top:6px;">
+        <span id="estabBannerEditVazio">Toque para escolher o banner</span>
+        <img id="estabBannerEditImg" style="display:none;">
+      </div>
+      <input type="file" id="fEstabLogo" accept="image/*" style="display:none">
+      <p class="estab-dica" id="estabDicaAbaixo">Preencha os dados abaixo. Veja informações no banner.</p>
+    </div>
+    <div class="field">
+      <label for="fEstabNome">Nome da clínica</label>
+      <input id="fEstabNome" placeholder="Ex: Clínica Sorriso">
+    </div>
+    <div class="field">
+      <label for="fEstabEndereco">Endereço</label>
+      <input id="fEstabEndereco" placeholder="Rua ou Avenida e número">
+    </div>
+    <div class="field">
+      <label for="fEstabCep">CEP</label>
+      <input id="fEstabCep" inputmode="numeric" placeholder="00000-000">
+    </div>
+    <div class="field">
+      <label for="fEstabTelefone">Telefone</label>
+      <input id="fEstabTelefone" type="tel" placeholder="(00) 00000-0000">
+    </div>
+    <div class="field">
+      <label for="fEstabCor">Cor da clínica (código hexadecimal)</label>
+      <div class="time-picker">
+        <input id="fEstabCorPicker" type="color" style="flex:0 0 44px; height:40px; padding:2px; cursor:pointer;">
+        <input id="fEstabCor" placeholder="#1E7FBF" style="flex:1;">
+      </div>
+      <button class="how-to-btn" id="btnRestaurarCor" style="margin-top:8px; font-size:12px;">Restaurar cor padrão</button>
+    </div>
+    <div class="sheet-actions">
+      <button class="btn-cancel" id="btnEstabCancel">Cancelar</button>
+      <button class="btn-save" id="btnEstabSave">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Tela Dia da semana -->
+<div class="overlay" id="weekdayOverlay" style="display:none;">
+  <div class="sheet">
+    <h2>Dia da semana</h2>
+    <div class="field">
+      <label>Digite uma data</label>
+      <div class="time-picker">
+        <select id="wdDia"></select>
+        <span>/</span>
+        <select id="wdMes"></select>
+        <span>/</span>
+        <select id="wdAno"></select>
+      </div>
+    </div>
+    <button class="action-btn primary" id="btnConsultarDia">Consultar</button>
+    <p id="wdResultado" style="text-align:center; font-size:16px; font-weight:600; color:var(--teal); margin:16px 0 0; min-height:22px;"></p>
+    <div class="sheet-actions" style="margin-top:16px;">
+      <button class="btn-cancel" id="btnWeekdayClose" style="flex:none; width:100%;">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Tela de Calendário -->
+<div class="overlay" id="calendarOverlay" style="display:none;">
+  <div class="sheet">
+    <div class="calendar-header">
+      <button class="cal-nav" id="calPrev">‹</button>
+      <h2 id="calMonthLabel">Mês</h2>
+      <button class="cal-nav" id="calNext">›</button>
+    </div>
+    <div class="calendar-grid" id="calendarGrid"></div>
+    <div class="sheet-actions" style="margin-top:16px;">
+      <button class="btn-cancel" id="btnCalendarClose" style="flex:none; width:100%;">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal do dia selecionado no calendário -->
+<div class="overlay" id="calendarDayOverlay" style="display:none;">
+  <div class="sheet">
+    <h2 id="calDayTitle">Compromissos do dia</h2>
+    <div id="calDayList"></div>
+    <div class="sheet-actions" style="margin-top:16px;">
+      <button class="btn-cancel" id="btnCalendarDayClose" style="flex:none; width:100%;">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Tela de Backup -->
+<div class="overlay" id="backupOverlay" style="display:none;">
+  <div class="sheet">
+    <h2>Backup</h2>
+    <div class="how-to-content">
+      <p><strong>Por que fazer backup?</strong><br>Seus dados ficam guardados só neste celular. Se você trocar de aparelho, formatar, ou desinstalar o app, tudo pode se perder — o backup evita isso.</p>
+      <p><strong>Como exportar</strong><br>Toque em "Exportar". Um arquivo será gerado com todos os seus compromissos, perfil e familiares cadastrados. Escolha para onde enviá-lo (Google Drive, e-mail para você mesmo, ou qualquer serviço de nuvem).</p>
+      <p><strong>Como restaurar</strong><br>No celular novo (ou depois de reinstalar o app), toque em "Importar" e selecione o arquivo de backup salvo. Todos os seus dados voltam exatamente como estavam.</p>
+      <p><strong>Recebeu o arquivo pelo WhatsApp?</strong><br>Salve-o no Google Drive (ou na pasta Downloads) antes de importar — assim ele fica fácil de encontrar, e o mais importante: seu backup fica protegido na nuvem, disponível mesmo que o celular seja perdido, quebrado ou formatado.</p>
+      <p><strong>Quando fazer</strong><br>Sempre que fizer alterações importantes, e principalmente antes de trocar ou formatar o celular.</p>
+    </div>
+    <div class="action-list">
+      <button class="action-btn primary" id="btnExportar">Exportar backup</button>
+      <button class="action-btn" id="btnImportar">Importar backup</button>
+      <input type="file" id="fImportarArquivo" accept="application/json" style="display:none;">
+    </div>
+    <div class="sheet-actions" style="margin-top:16px;">
+      <button class="btn-cancel" id="btnBackupClose">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Como usar -->
+<div class="overlay" id="howToOverlay" style="display:none;">
+  <div class="sheet">
+    <h2>Como usar o Odonto Agenda</h2>
+    <div class="how-to-content">
+      <p><strong>Funciona offline</strong><br>Este app funciona 100% offline: você pode cadastrar, editar e consultar seus compromissos mesmo sem internet. A conexão só é necessária para abrir o app pela primeira vez e para enviar/receber backups.</p>
+      <p><strong>Adicionar um atendimento</strong><br>Toque no botão "+" e preencha título, tipo de serviço, data, hora e local. Salve e pronto.</p>
+      <p><strong>Organizando com as abas</strong><br>
+      • Próximos: o que ainda está por vir<br>
+      • Pendentes: passou da data e ainda não foi concluído<br>
+      • Prioridades: os que você marcou como importantes<br>
+      • Concluídos: o que já foi resolvido</p>
+      <p><strong>Ações rápidas</strong><br>Toque em qualquer compromisso para marcar como concluído, dar prioridade, editar, compartilhar ou excluir.</p>
+      <p><strong>Compartilhar</strong><br>Gere uma imagem pronta para enviar ou imprimir — de um compromisso só ou de todos de uma vez.</p>
+      <p><strong>Perfil</strong><br>Toque na sua foto/nome no topo para editar seus dados.</p>
+      <p><strong>Família</strong><br>Toque no "+" ao lado de "Família" para cadastrar parentes. Cada um tem sua própria lista de compromissos, separada da sua.</p>
+      <p><strong>Calendário</strong><br>Na engrenagem (⚙️), toque em "Calendário" para ver todos os compromissos organizados por mês. Cada pessoa da família tem uma cor própria nas bolinhas — toque em um dia para ver os detalhes.</p>
+      <p><strong>Backup</strong><br>Na engrenagem (⚙️), toque em "Backup" para exportar ou restaurar seus dados.</p>
+      <p style="text-align:center; color:var(--ink-soft); font-size:12px; margin-top:24px;">Desenvolvedor: GrowCet</p>
+    </div>
+    <div class="sheet-actions">
+      <button class="btn-cancel" id="btnHowToClose" style="flex:none; width:100%;">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de novo familiar -->
+<div class="overlay" id="familyOverlay" style="display:none;">
+  <div class="sheet">
+    <h2>Novo familiar</h2>
+    <div class="avatar-edit">
+      <div class="avatar-large" id="famAvatarLargeWrap">
+        <img id="famAvatarLargeImg" style="display:none">
+        <span id="famAvatarLargeInitial">?</span>
+      </div>
+      <label class="btn-photo" for="fFamFoto">Escolher foto</label>
+      <input type="file" id="fFamFoto" accept="image/*" style="display:none">
+    </div>
+    <div class="field">
+      <label for="fFamNome">Nome</label>
+      <input id="fFamNome" placeholder="Nome do familiar">
+    </div>
+    <div class="sheet-actions">
+      <button class="btn-cancel" id="btnFamCancel">Cancelar</button>
+      <button class="btn-save" id="btnFamSave">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de ações do card -->
+<div class="overlay" id="actionOverlay" style="display:none;">
+  <div class="sheet">
+    <div id="actionMainView">
+      <h2 id="actionSheetTitle">Compromisso</h2>
+      <div class="action-list">
+        <button class="action-btn primary" id="actBtnDone"></button>
+        <button class="action-btn" id="actBtnEspecial"></button>
+        <button class="action-btn" id="actBtnEdit">Editar</button>
+        <button class="action-btn" id="actBtnShare">Compartilhar</button>
+        <button class="action-btn danger" id="actBtnDelete">Excluir</button>
+      </div>
+      <div class="sheet-actions" style="margin-top:16px;">
+        <button class="btn-cancel" id="btnActionCancel">Fechar</button>
+      </div>
+    </div>
+    <div id="actionConfirmView" style="display:none;">
+      <h2>Excluir compromisso?</h2>
+      <p style="color:var(--ink-soft); font-size:14px; margin:0 0 20px;">Deseja excluir agendamento?</p>
+      <div class="sheet-actions">
+        <button class="btn-cancel" id="btnDeleteCancel">Cancelar</button>
+        <button class="btn-save" style="background:var(--danger);" id="btnDeleteConfirm">Excluir</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de compartilhamento individual -->
+<div class="toast" id="toast"></div>
+
+<script>
+  /* ---------- IndexedDB ---------- */
+  const DB_NAME = 'odontoAgendaDB';
+  const DB_VERSION = 4;
+  let dbInstance = null;
+
+  function openDB(){
+    return new Promise((resolve, reject) => {
+      const req = indexedDB.open(DB_NAME, DB_VERSION);
+      req.onupgradeneeded = (e) => {
+        const db = e.target.result;
+        if(!db.objectStoreNames.contains('compromissos')){
+          db.createObjectStore('compromissos', { keyPath: 'id' });
+        }
+        if(!db.objectStoreNames.contains('perfil')){
+          db.createObjectStore('perfil', { keyPath: 'id' });
+        }
+        if(!db.objectStoreNames.contains('familiares')){
+          db.createObjectStore('familiares', { keyPath: 'id' });
+        }
+        if(!db.objectStoreNames.contains('config')){
+          db.createObjectStore('config', { keyPath: 'id' });
+        }
+      };
+      req.onsuccess = (e) => resolve(e.target.result);
+      req.onerror = (e) => reject(e.target.error);
+    });
+  }
+
+  function dbGetAll(store){
+    return new Promise((resolve, reject) => {
+      const tx = dbInstance.transaction(store, 'readonly');
+      const req = tx.objectStore(store).getAll();
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  function dbGet(store, key){
+    return new Promise((resolve, reject) => {
+      const tx = dbInstance.transaction(store, 'readonly');
+      const req = tx.objectStore(store).get(key);
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  function dbPut(store, value){
+    return new Promise((resolve, reject) => {
+      const tx = dbInstance.transaction(store, 'readwrite');
+      tx.objectStore(store).put(value);
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+  }
+
+  function dbDelete(store, key){
+    return new Promise((resolve, reject) => {
+      const tx = dbInstance.transaction(store, 'readwrite');
+      tx.objectStore(store).delete(key);
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+  }
+
+  /* ---------- Estado ---------- */
+  let items = [];
+  let perfil = null;
+  let familiares = [];
+  let currentPersonId = 'titular';
+  let currentTab = 'proximos';
+  let editingId = null;
+
+  const listEl = document.getElementById('list');
+  const overlay = document.getElementById('overlay');
+  const profileOverlay = document.getElementById('profileOverlay');
+
+  /* ---------- Utilitários ---------- */
+  function formatDate(dateStr){
+    if(!dateStr) return '';
+    const [y,m,d] = dateStr.split('-');
+    return `${d}/${m}/${y}`;
+  }
+  function escapeHtml(str){
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+  function tipoLabel(tipo){
+    return tipo || 'Procedimento';
+  }
+  function generateUserId(){
+    const d = new Date();
+    const dataParte = String(d.getFullYear()) + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0');
+    const aleatorio = Math.random().toString(36).slice(2, 6);
+    return dataParte + aleatorio;
+  }
+  function diaSemana(dateStr){
+    const dias = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+    const [y,m,d] = dateStr.split('-').map(Number);
+    return dias[new Date(y, m - 1, d).getDay()];
+  }
+  function isPastDate(dateStr){
+    const hoje = new Date();
+    hoje.setHours(0,0,0,0);
+    const [y,m,d] = dateStr.split('-').map(Number);
+    return new Date(y, m - 1, d) < hoje;
+  }
+
+  /* ---------- Renderização de compromissos ---------- */
+  function render(){
+    let filtered;
+    let emptyMsg = '';
+    const doPessoa = items.filter(it => (it.pessoaId || 'titular') === currentPersonId);
+
+    if(currentTab === 'proximos'){
+      filtered = doPessoa.filter(it => !it.done && !isPastDate(it.data));
+      emptyMsg = 'Nenhum compromisso marcado ainda. Toque em + para adicionar.';
+    } else if(currentTab === 'concluidos'){
+      filtered = doPessoa.filter(it => it.done);
+      emptyMsg = 'Nenhum compromisso concluído ainda.';
+    } else if(currentTab === 'pendentes'){
+      filtered = doPessoa.filter(it => !it.done && isPastDate(it.data));
+      emptyMsg = 'Nenhuma pendência. Tudo em dia!';
+    } else if(currentTab === 'especiais'){
+      filtered = doPessoa.filter(it => it.especial);
+      emptyMsg = 'Nenhum compromisso marcado como prioridade ainda.';
+    }
+
+    filtered.sort((a,b) => {
+      const da = new Date(a.data + 'T' + (a.hora || '00:00'));
+      const db_ = new Date(b.data + 'T' + (b.hora || '00:00'));
+      return currentTab === 'concluidos' ? db_ - da : da - db_;
+    });
+
+    if(filtered.length === 0){
+      listEl.innerHTML = `<div class="empty"><p>${emptyMsg}</p></div>`;
+      return;
+    }
+
+    listEl.innerHTML = filtered.map((it, idx) => `
+      <div class="card ${it.done ? 'done' : ''}" onclick="openActionSheet('${it.id}')">
+        <div class="card-top">
+          <div>
+            <p class="card-title">${it.especial ? '★ ' : ''}${escapeHtml(tipoLabel(it.tipo))}</p>
+            <p class="card-sub">${escapeHtml(it.titulo)}</p>
+          </div>
+          <p class="card-num">${filtered.length - idx}</p>
+        </div>
+        <div class="card-date"><strong>${diaSemana(it.data)}, ${formatDate(it.data)}</strong>${it.hora ? ' às ' + it.hora : ''}</div>
+        ${it.local ? `<p class="card-sub" style="margin-top:6px;">${escapeHtml(it.local)}</p>` : ''}
+        ${it.notas ? `<div class="card-notes">${escapeHtml(it.notas)}</div>` : ''}
+      </div>
+    `).join('');
+  }
+
+  window.markDone = async function(id){
+    const it = items.find(i => i.id === id);
+    if(it){ it.done = true; await dbPut('compromissos', it); render(); }
+  };
+  window.markPending = async function(id){
+    const it = items.find(i => i.id === id);
+    if(it){ it.done = false; await dbPut('compromissos', it); render(); }
+  };
+  window.removeItem = async function(id){
+    items = items.filter(i => i.id !== id);
+    await dbDelete('compromissos', id);
+    cancelarNotificacao(id);
+    render();
+  };
+  window.toggleEspecial = async function(id){
+    const it = items.find(i => i.id === id);
+    if(it){ it.especial = !it.especial; await dbPut('compromissos', it); render(); }
+  };
+
+  /* ---------- Menu de ações do card ---------- */
+  const actionOverlay = document.getElementById('actionOverlay');
+  const actionMainView = document.getElementById('actionMainView');
+  const actionConfirmView = document.getElementById('actionConfirmView');
+  let actionItemId = null;
+
+  function closeActionOverlay(){
+    actionOverlay.style.display = 'none';
+    actionMainView.style.display = 'block';
+    actionConfirmView.style.display = 'none';
+  }
+
+  window.openActionSheet = function(id){
+    const it = items.find(i => i.id === id);
+    if(!it) return;
+    actionItemId = id;
+    document.getElementById('actionSheetTitle').textContent = it.titulo;
+    document.getElementById('actBtnDone').textContent = it.done ? 'Reabrir' : 'Marcar concluído';
+    document.getElementById('actBtnEspecial').textContent = it.especial ? 'Remover prioridade' : 'Marcar prioridade';
+    actionMainView.style.display = 'block';
+    actionConfirmView.style.display = 'none';
+    actionOverlay.style.display = 'flex';
+  };
+
+  document.getElementById('btnActionCancel').addEventListener('click', closeActionOverlay);
+  actionOverlay.addEventListener('click', (e) => { if(e.target === actionOverlay) closeActionOverlay(); });
+
+  document.getElementById('actBtnDone').addEventListener('click', async () => {
+    const it = items.find(i => i.id === actionItemId);
+    if(it){ it.done = !it.done; await dbPut('compromissos', it); }
+    closeActionOverlay();
+    render();
+  });
+  document.getElementById('actBtnEspecial').addEventListener('click', async () => {
+    const it = items.find(i => i.id === actionItemId);
+    if(it){ it.especial = !it.especial; await dbPut('compromissos', it); }
+    closeActionOverlay();
+    render();
+  });
+  document.getElementById('actBtnEdit').addEventListener('click', () => {
+    closeActionOverlay();
+    editItem(actionItemId);
+  });
+  document.getElementById('actBtnShare').addEventListener('click', () => {
+    closeActionOverlay();
+    shareItem(actionItemId);
+  });
+  document.getElementById('actBtnDelete').addEventListener('click', () => {
+    actionMainView.style.display = 'none';
+    actionConfirmView.style.display = 'block';
+  });
+  document.getElementById('btnDeleteCancel').addEventListener('click', () => {
+    actionMainView.style.display = 'block';
+    actionConfirmView.style.display = 'none';
+  });
+  document.getElementById('btnDeleteConfirm').addEventListener('click', () => {
+    closeActionOverlay();
+    removeItem(actionItemId);
+  });
+  window.editItem = function(id){
+    const it = items.find(i => i.id === id);
+    if(!it) return;
+    editingId = id;
+    document.getElementById('sheetTitle').textContent = 'Editar compromisso';
+    document.getElementById('fTipoServico').value = it.tipo || '';
+    document.getElementById('fTitulo').value = it.titulo;
+    setDataSelects(it.data);
+    const [h, m] = (it.hora || '08:00').split(':');
+    document.getElementById('fHoraH').value = h;
+    document.getElementById('fHoraM').value = m;
+    document.getElementById('fLocal').value = it.local || '';
+    document.getElementById('fNotas').value = it.notas || '';
+    overlay.style.display = 'flex';
+  };
+
+  document.querySelectorAll('.tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentTab = btn.dataset.tab;
+      render();
+    });
+  });
+
+  /* ---------- Seletor de hora próprio ---------- */
+  function fillTimeSelects(){
+    const selH = document.getElementById('fHoraH');
+    const selM = document.getElementById('fHoraM');
+    selH.innerHTML = '';
+    selM.innerHTML = '';
+    for(let h = 0; h < 24; h++){
+      const v = String(h).padStart(2, '0');
+      selH.innerHTML += `<option value="${v}">${v}</option>`;
+    }
+    for(let m = 0; m < 60; m += 5){
+      const v = String(m).padStart(2, '0');
+      selM.innerHTML += `<option value="${v}">${v}</option>`;
+    }
+  }
+
+  function fillDateSelects(){
+    const selDia = document.getElementById('fDia');
+    const selMes = document.getElementById('fMes');
+    const selAno = document.getElementById('fAno');
+    selDia.innerHTML = '';
+    selMes.innerHTML = '';
+    selAno.innerHTML = '';
+    for(let d = 1; d <= 31; d++){
+      const v = String(d).padStart(2, '0');
+      selDia.innerHTML += `<option value="${v}">${v}</option>`;
+    }
+    const meses = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+    meses.forEach((nome, i) => {
+      const v = String(i + 1).padStart(2, '0');
+      selMes.innerHTML += `<option value="${v}">${nome}</option>`;
+    });
+    const anoAtual = new Date().getFullYear();
+    for(let a = anoAtual - 1; a <= anoAtual + 5; a++){
+      selAno.innerHTML += `<option value="${a}">${a}</option>`;
+    }
+  }
+
+  function getDataSelecionada(){
+    const dia = document.getElementById('fDia').value;
+    const mes = document.getElementById('fMes').value;
+    const ano = document.getElementById('fAno').value;
+    return `${ano}-${mes}-${dia}`;
+  }
+
+  function setDataSelects(dataStr){
+    const hoje = new Date();
+    const [ano, mes, dia] = (dataStr || '').split('-');
+    document.getElementById('fDia').value = dia || String(hoje.getDate()).padStart(2,'0');
+    document.getElementById('fMes').value = mes || String(hoje.getMonth()+1).padStart(2,'0');
+    document.getElementById('fAno').value = ano || String(hoje.getFullYear());
+  }
+
+  function openNewSheet(){
+    editingId = null;
+    document.getElementById('sheetTitle').textContent = 'Novo compromisso';
+    document.getElementById('fTipoServico').value = '';
+    document.getElementById('fTitulo').value = '';
+    setDataSelects(null);
+    document.getElementById('fHoraH').value = '08';
+    document.getElementById('fHoraM').value = '00';
+    document.getElementById('fLocal').value = '';
+    document.getElementById('fNotas').value = '';
+    overlay.style.display = 'flex';
+  }
+
+  document.getElementById('fabAdd').addEventListener('click', openNewSheet);
+  document.getElementById('btnCancel').addEventListener('click', () => { overlay.style.display = 'none'; });
+  overlay.addEventListener('click', (e) => { if(e.target === overlay) overlay.style.display = 'none'; });
+
+  document.getElementById('btnSave').addEventListener('click', async () => {
+    const titulo = document.getElementById('fTitulo').value.trim();
+    const data = getDataSelecionada();
+    if(!titulo || !data){
+      showToast('Preencha ao menos o título e a data.');
+      return;
+    }
+    const hora = document.getElementById('fHoraH').value + ':' + document.getElementById('fHoraM').value;
+    const payload = {
+      titulo,
+      data,
+      hora,
+      local: document.getElementById('fLocal').value.trim(),
+      notas: document.getElementById('fNotas').value.trim(),
+      tipo: document.getElementById('fTipoServico').value.trim() || 'Procedimento',
+    };
+    if(editingId){
+      const it = items.find(i => i.id === editingId);
+      Object.assign(it, payload);
+      await dbPut('compromissos', it);
+      agendarNotificacao(it);
+    } else {
+      const novo = { id: Date.now().toString(36) + Math.random().toString(36).slice(2,6), done:false, pessoaId: currentPersonId, ...payload };
+      items.push(novo);
+      await dbPut('compromissos', novo);
+      agendarNotificacao(novo);
+    }
+    overlay.style.display = 'none';
+    render();
+  });
+
+  /* ---------- Perfil (sensível ao contexto: titular ou familiar) ---------- */
+  let novaFotoBase64 = null;
+
+  function getPerfilAtual(){
+    return currentPersonId === 'titular' ? perfil : familiares.find(f => f.id === currentPersonId);
+  }
+
+  function renderProfileBar(){
+    const chip = document.getElementById('perfilChip');
+    if(chip && currentPersonId === 'titular'){
+      chip.textContent = 'Perfil';
+    }
+  }
+
+  function abrirPerfilPessoal(){
+    novaFotoBase64 = null;
+    const p = getPerfilAtual();
+    const nomeAtual = p ? p.nome || '' : '';
+    document.getElementById('fNome').value = nomeAtual;
+
+    const previewImg = document.getElementById('avatarLargeImg');
+    const previewInitial = document.getElementById('avatarLargeInitial');
+    if(p && p.foto){
+      previewImg.src = p.foto;
+      previewImg.style.display = 'block';
+      previewInitial.style.display = 'none';
+    } else {
+      previewImg.style.display = 'none';
+      previewInitial.style.display = 'block';
+      previewInitial.textContent = nomeAtual ? nomeAtual.trim().charAt(0).toUpperCase() : '?';
+    }
+
+    document.getElementById('profileIdPreview').textContent = p && p.userId
+      ? 'ID: ' + p.userId
+      : 'Um ID único será gerado ao salvar';
+
+    document.getElementById('btnDeleteFamiliar').style.display = currentPersonId === 'titular' ? 'none' : 'block';
+    document.getElementById('profileMainView').style.display = 'block';
+    document.getElementById('profileDeleteConfirmView').style.display = 'none';
+    profileOverlay.style.display = 'flex';
+  }
+  document.getElementById('btnEditarPerfilFamiliar').addEventListener('click', abrirPerfilPessoal);
+
+  document.getElementById('btnProfileCancel').addEventListener('click', () => { profileOverlay.style.display = 'none'; });
+  profileOverlay.addEventListener('click', (e) => { if(e.target === profileOverlay) profileOverlay.style.display = 'none'; });
+
+  document.getElementById('btnDeleteFamiliar').addEventListener('click', () => {
+    const p = getPerfilAtual();
+    document.getElementById('profileDeleteTitle').textContent = 'Excluir ' + (p ? p.nome : 'familiar') + '?';
+    document.getElementById('profileMainView').style.display = 'none';
+    document.getElementById('profileDeleteConfirmView').style.display = 'block';
+  });
+  document.getElementById('btnDeleteFamiliarCancel').addEventListener('click', () => {
+    document.getElementById('profileMainView').style.display = 'block';
+    document.getElementById('profileDeleteConfirmView').style.display = 'none';
+  });
+  document.getElementById('btnDeleteFamiliarConfirm').addEventListener('click', async () => {
+    const idParaExcluir = currentPersonId;
+    familiares = familiares.filter(f => f.id !== idParaExcluir);
+    await dbDelete('familiares', idParaExcluir);
+    const compromissosDoFamiliar = items.filter(it => it.pessoaId === idParaExcluir);
+    for(const it of compromissosDoFamiliar){
+      await dbDelete('compromissos', it.id);
+    }
+    items = items.filter(it => it.pessoaId !== idParaExcluir);
+    profileOverlay.style.display = 'none';
+    renderPeopleRow();
+    switchPerson('titular');
+  });
+
+  document.getElementById('fFoto').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      novaFotoBase64 = reader.result;
+      const previewImg = document.getElementById('avatarLargeImg');
+      const previewInitial = document.getElementById('avatarLargeInitial');
+      previewImg.src = novaFotoBase64;
+      previewImg.style.display = 'block';
+      previewInitial.style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+  });
+
+  document.getElementById('btnProfileSave').addEventListener('click', async () => {
+    const nome = document.getElementById('fNome').value.trim();
+    if(!nome){
+      showToast('Informe um nome.');
+      return;
+    }
+    if(currentPersonId === 'titular'){
+      if(!perfil){
+        perfil = { id: 1, nome, foto: null, userId: generateUserId() };
+      } else {
+        perfil.nome = nome;
+        if(!perfil.userId) perfil.userId = generateUserId();
+      }
+      if(novaFotoBase64) perfil.foto = novaFotoBase64;
+      await dbPut('perfil', perfil);
+    } else {
+      const fam = familiares.find(f => f.id === currentPersonId);
+      if(fam){
+        fam.nome = nome;
+        if(novaFotoBase64) fam.foto = novaFotoBase64;
+        await dbPut('familiares', fam);
+        renderPeopleRow();
+      }
+    }
+    renderProfileBar();
+    profileOverlay.style.display = 'none';
+  });
+
+  /* ---------- Dia da semana (consulta simples, sem calendário visual) ---------- */
+  const weekdayOverlay = document.getElementById('weekdayOverlay');
+  const diasSemanaCompletos = ['domingo', 'segunda-feira', 'terça-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sábado'];
+
+  function fillWeekdaySelects(){
+    const selDia = document.getElementById('wdDia');
+    const selMes = document.getElementById('wdMes');
+    const selAno = document.getElementById('wdAno');
+    selDia.innerHTML = '';
+    selMes.innerHTML = '';
+    selAno.innerHTML = '';
+    for(let d = 1; d <= 31; d++){
+      const v = String(d).padStart(2, '0');
+      selDia.innerHTML += `<option value="${v}">${v}</option>`;
+    }
+    const meses = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+    meses.forEach((nome, i) => {
+      const v = String(i + 1).padStart(2, '0');
+      selMes.innerHTML += `<option value="${v}">${nome}</option>`;
+    });
+    const anoAtual = new Date().getFullYear();
+    for(let a = anoAtual + 5; a >= anoAtual - 120; a--){
+      selAno.innerHTML += `<option value="${a}">${a}</option>`;
+    }
+    selAno.value = String(anoAtual);
+  }
+
+  document.getElementById('gearDiaSemana').addEventListener('click', () => {
+    gearMenuOverlay.style.display = 'none';
+    document.getElementById('wdResultado').textContent = '';
+    weekdayOverlay.style.display = 'flex';
+  });
+
+  document.getElementById('btnConsultarDia').addEventListener('click', () => {
+    const dia = document.getElementById('wdDia').value;
+    const mes = document.getElementById('wdMes').value;
+    const ano = document.getElementById('wdAno').value;
+    const dataStr = `${ano}-${mes}-${dia}`;
+    const nomeDia = diasSemanaCompletos[new Date(Number(ano), Number(mes) - 1, Number(dia)).getDay()];
+    document.getElementById('wdResultado').textContent = `${dia}/${mes}/${ano} caiu numa ${nomeDia}`;
+  });
+
+  document.getElementById('btnWeekdayClose').addEventListener('click', () => { weekdayOverlay.style.display = 'none'; });
+  weekdayOverlay.addEventListener('click', (e) => { if(e.target === weekdayOverlay) weekdayOverlay.style.display = 'none'; });
+
+  /* ---------- Calendário geral da família ---------- */
+  const calendarOverlay = document.getElementById('calendarOverlay');
+  const calendarDayOverlay = document.getElementById('calendarDayOverlay');
+  const familyColors = ['#6B5B7A', '#3D6B77', '#A98B4E', '#5C7A63', '#8A6F5C'];
+  let calYear, calMonth;
+
+  const CO_PADRAO = '#1E7FBF';
+  function corPrimaria(){
+    return (estabelecimento && estabelecimento.corHex) ? estabelecimento.corHex : CO_PADRAO;
+  }
+  function aplicarCorPersonalizada(){
+    document.documentElement.style.setProperty('--teal', corPrimaria());
+    document.documentElement.style.setProperty('--teal-soft', hexParaClaro(corPrimaria()));
+  }
+  function hexParaClaro(hex){
+    hex = (hex || '').replace('#', '');
+    if(hex.length !== 6) return '#D8E9F5';
+    const r = parseInt(hex.slice(0,2), 16);
+    const g = parseInt(hex.slice(2,4), 16);
+    const b = parseInt(hex.slice(4,6), 16);
+    const clarear = (v) => Math.round(v + (255 - v) * 0.82);
+    return `rgb(${clarear(r)}, ${clarear(g)}, ${clarear(b)})`;
+  }
+
+  function getPersonColor(pessoaId){
+    if(!pessoaId || pessoaId === 'titular') return corPrimaria();
+    const idx = familiares.findIndex(f => f.id === pessoaId);
+    return idx >= 0 ? familyColors[idx % familyColors.length] : '#8A8A8A';
+  }
+
+  function getPersonName(pessoaId){
+    if(!pessoaId || pessoaId === 'titular') return (perfil && perfil.nome) ? perfil.nome : 'Eu';
+    const f = familiares.find(f => f.id === pessoaId);
+    return f ? f.nome : 'Familiar';
+  }
+
+  function renderCalendar(){
+    const meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+    document.getElementById('calMonthLabel').textContent = meses[calMonth] + ' ' + calYear;
+
+    const primeiroDia = new Date(calYear, calMonth, 1);
+    const inicioSemana = primeiroDia.getDay();
+    const diasNoMes = new Date(calYear, calMonth + 1, 0).getDate();
+    const diasSemanaLabels = ['D','S','T','Q','Q','S','S'];
+
+    let html = diasSemanaLabels.map(d => `<div class="cal-weekday">${d}</div>`).join('');
+    for(let i = 0; i < inicioSemana; i++){
+      html += '<div class="cal-day empty"></div>';
+    }
+
+    const hoje = new Date();
+    const hojeStr = hoje.getFullYear() + '-' + String(hoje.getMonth()+1).padStart(2,'0') + '-' + String(hoje.getDate()).padStart(2,'0');
+
+    for(let dia = 1; dia <= diasNoMes; dia++){
+      const dataStr = calYear + '-' + String(calMonth+1).padStart(2,'0') + '-' + String(dia).padStart(2,'0');
+      const itensDoDia = items.filter(it => it.data === dataStr);
+      const pessoasUnicas = [...new Set(itensDoDia.map(it => it.pessoaId || 'titular'))];
+      const dots = pessoasUnicas.slice(0, 4).map(pid => `<span class="cal-dot" style="background:${getPersonColor(pid)}"></span>`).join('');
+      const isToday = dataStr === hojeStr;
+      html += `<div class="cal-day${isToday ? ' today' : ''}" onclick="openCalendarDay('${dataStr}')">
+        <span>${dia}</span>
+        <div class="cal-dots">${dots}</div>
+      </div>`;
+    }
+
+    document.getElementById('calendarGrid').innerHTML = html;
+  }
+
+  function openCalendar(){
+    const hoje = new Date();
+    calYear = hoje.getFullYear();
+    calMonth = hoje.getMonth();
+    renderCalendar();
+    calendarOverlay.style.display = 'flex';
+  }
+
+  document.getElementById('calPrev').addEventListener('click', () => {
+    calMonth--;
+    if(calMonth < 0){ calMonth = 11; calYear--; }
+    renderCalendar();
+  });
+  document.getElementById('calNext').addEventListener('click', () => {
+    calMonth++;
+    if(calMonth > 11){ calMonth = 0; calYear++; }
+    renderCalendar();
+  });
+  document.getElementById('btnCalendarClose').addEventListener('click', () => { calendarOverlay.style.display = 'none'; });
+  calendarOverlay.addEventListener('click', (e) => { if(e.target === calendarOverlay) calendarOverlay.style.display = 'none'; });
+
+  window.openCalendarDay = function(dataStr){
+    const itensDoDia = items.filter(it => it.data === dataStr).sort((a,b) => (a.hora||'').localeCompare(b.hora||''));
+    document.getElementById('calDayTitle').textContent = diaSemana(dataStr) + ', ' + formatDate(dataStr);
+    const listEl = document.getElementById('calDayList');
+    if(itensDoDia.length === 0){
+      listEl.innerHTML = '<p style="color:var(--ink-soft); font-size:14px;">Nenhum compromisso nesse dia.</p>';
+    } else {
+      listEl.innerHTML = itensDoDia.map(it => `
+        <div class="cal-day-item">
+          <span class="cal-day-dot" style="background:${getPersonColor(it.pessoaId || 'titular')}"></span>
+          <div>
+            <p style="margin:0; font-weight:600; font-size:14px;">${escapeHtml(it.titulo)}</p>
+            <p style="margin:2px 0 0; font-size:12px; color:var(--ink-soft);">${getPersonName(it.pessoaId || 'titular')} — ${tipoLabel(it.tipo)}${it.hora ? ' — ' + it.hora : ''}</p>
+          </div>
+        </div>
+      `).join('');
+    }
+    calendarDayOverlay.style.display = 'flex';
+  };
+
+  document.getElementById('btnCalendarDayClose').addEventListener('click', () => { calendarDayOverlay.style.display = 'none'; });
+  calendarDayOverlay.addEventListener('click', (e) => { if(e.target === calendarDayOverlay) calendarDayOverlay.style.display = 'none'; });
+
+  /* ---------- Menu da engrenagem, Como usar e Backup ---------- */
+  const howToOverlay = document.getElementById('howToOverlay');
+  const gearMenuOverlay = document.getElementById('gearMenuOverlay');
+  const backupOverlay = document.getElementById('backupOverlay');
+
+  document.getElementById('btnGear').addEventListener('click', () => { gearMenuOverlay.style.display = 'flex'; });
+  document.getElementById('btnGearCancel').addEventListener('click', () => { gearMenuOverlay.style.display = 'none'; });
+  gearMenuOverlay.addEventListener('click', (e) => { if(e.target === gearMenuOverlay) gearMenuOverlay.style.display = 'none'; });
+
+  document.getElementById('gearCalendario').addEventListener('click', () => {
+    gearMenuOverlay.style.display = 'none';
+    openCalendar();
+  });
+
+  /* ---------- Estabelecimento (banner, info, edição, cor personalizada) ---------- */
+  const estabelecimentoOverlay = document.getElementById('estabelecimentoOverlay');
+  const estabInfoOverlay = document.getElementById('estabInfoOverlay');
+  let estabelecimento = null;
+  let novoLogoBase64 = null;
+
+  function renderBanner(){
+    const vazio = document.getElementById('estabBannerVazio');
+    const img = document.getElementById('estabBannerImg');
+    if(estabelecimento && estabelecimento.logo){
+      img.src = estabelecimento.logo;
+      img.style.display = 'block';
+      vazio.style.display = 'none';
+    } else {
+      img.style.display = 'none';
+      vazio.style.display = 'block';
+    }
+
+    const titleEl = document.getElementById('appTitle');
+    const signatureEl = document.getElementById('appSignature');
+    if(estabelecimento && estabelecimento.nome){
+      titleEl.textContent = estabelecimento.nome;
+      signatureEl.style.display = 'block';
+    } else {
+      titleEl.textContent = 'Odonto Agenda';
+      signatureEl.style.display = 'none';
+    }
+  }
+
+  document.getElementById('estabBanner').addEventListener('click', () => {
+    if(estabelecimento && estabelecimento.nome){
+      abrirEstabInfo();
+    } else {
+      abrirEstabEdicao();
+    }
+  });
+
+  function linkGoogleMaps(){
+    const partes = [estabelecimento.endereco, estabelecimento.cep].filter(Boolean).join(', ');
+    if(!partes) return '';
+    return 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(partes);
+  }
+
+  function abrirEstabInfo(){
+    const vazio = document.getElementById('estabInfoBannerVazio');
+    const img = document.getElementById('estabInfoBannerImg');
+    if(estabelecimento && estabelecimento.logo){
+      img.src = estabelecimento.logo;
+      img.style.display = 'block';
+      vazio.style.display = 'none';
+    } else {
+      img.style.display = 'none';
+      vazio.style.display = 'block';
+    }
+    document.getElementById('estabInfoNome').textContent = estabelecimento.nome || '';
+    const linkMaps = linkGoogleMaps();
+    const enderecoEl = document.getElementById('estabInfoEndereco');
+    const enderecoTexto = [estabelecimento.endereco, estabelecimento.cep].filter(Boolean).join(' — ');
+    enderecoEl.innerHTML = linkMaps
+      ? `<a href="${linkMaps}" target="_blank" style="color:var(--teal);">${escapeHtml(enderecoTexto)} · ver no mapa</a>`
+      : escapeHtml(enderecoTexto);
+    document.getElementById('estabInfoTelefone').textContent = estabelecimento.telefone || '';
+    estabInfoOverlay.style.display = 'flex';
+  }
+  document.getElementById('btnEstabInfoClose').addEventListener('click', () => { estabInfoOverlay.style.display = 'none'; });
+  estabInfoOverlay.addEventListener('click', (e) => { if(e.target === estabInfoOverlay) estabInfoOverlay.style.display = 'none'; });
+
+  document.getElementById('btnEstabEditar').addEventListener('click', () => {
+    estabInfoOverlay.style.display = 'none';
+    abrirEstabEdicao();
+  });
+
+  document.getElementById('btnEstabCompartilhar').addEventListener('click', async () => {
+    const canvas = document.createElement('canvas');
+    const largura = 720;
+    const alturaBanner = Math.round(largura * 9 / 16);
+    const alturaTexto = 140;
+    canvas.width = largura;
+    canvas.height = alturaBanner + alturaTexto;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    if(estabelecimento && estabelecimento.logo){
+      const img = document.getElementById('estabInfoBannerImg');
+      ctx.drawImage(img, 0, 0, largura, alturaBanner);
+    } else {
+      ctx.fillStyle = hexParaClaro(corPrimaria());
+      ctx.fillRect(0, 0, largura, alturaBanner);
+    }
+
+    ctx.fillStyle = '#1B2A26';
+    ctx.font = '600 22px Arial';
+    ctx.fillText(estabelecimento.nome || '', 24, alturaBanner + 32);
+    ctx.fillStyle = corPrimaria();
+    ctx.font = '15px Arial';
+    let yTexto = alturaBanner + 58;
+    if(estabelecimento.endereco){
+      ctx.fillText(estabelecimento.endereco, 24, yTexto);
+      yTexto += 24;
+    }
+    if(estabelecimento.cep){
+      ctx.fillText('CEP: ' + estabelecimento.cep, 24, yTexto);
+      yTexto += 24;
+    }
+    if(estabelecimento.telefone){
+      ctx.fillText('Tel: ' + estabelecimento.telefone, 24, yTexto);
+    }
+
+    canvas.toBlob(async (blob) => {
+      const nomeArquivo = 'clinica-' + (estabelecimento.nome || 'odonto-agenda').trim().toLowerCase().replace(/[^a-z0-9]+/g, '-') + '.png';
+      const arquivo = new File([blob], nomeArquivo, { type: 'image/png' });
+      const linkMaps = linkGoogleMaps();
+      const textoCompartilhar = linkMaps ? ('Localização: ' + linkMaps) : '';
+      if(navigator.canShare && navigator.canShare({ files: [arquivo] })){
+        try {
+          await navigator.share({ files: [arquivo], title: estabelecimento.nome || 'Odonto Agenda', text: textoCompartilhar });
+          return;
+        } catch(e){ /* cai no download */ }
+      }
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = nomeArquivo;
+      a.click();
+      URL.revokeObjectURL(url);
+    }, 'image/png');
+  });
+
+  function abrirEstabEdicao(){
+    gearMenuOverlay.style.display = 'none';
+    novoLogoBase64 = null;
+    document.getElementById('fEstabNome').value = estabelecimento ? estabelecimento.nome || '' : '';
+    document.getElementById('fEstabEndereco').value = estabelecimento ? estabelecimento.endereco || '' : '';
+    document.getElementById('fEstabCep').value = estabelecimento ? estabelecimento.cep || '' : '';
+    document.getElementById('fEstabTelefone').value = estabelecimento ? estabelecimento.telefone || '' : '';
+    document.getElementById('fEstabCor').value = corPrimaria();
+    document.getElementById('fEstabCorPicker').value = corPrimaria();
+
+    const jaTemCadastro = !!(estabelecimento && estabelecimento.nome);
+    document.getElementById('estabDicaAcima').style.display = jaTemCadastro ? 'none' : 'block';
+    document.getElementById('estabDicaAbaixo').style.display = jaTemCadastro ? 'none' : 'block';
+
+    const previewImg = document.getElementById('estabBannerEditImg');
+    const previewVazio = document.getElementById('estabBannerEditVazio');
+    if(estabelecimento && estabelecimento.logo){
+      previewImg.src = estabelecimento.logo;
+      previewImg.style.display = 'block';
+      previewVazio.style.display = 'none';
+    } else {
+      previewImg.style.display = 'none';
+      previewVazio.style.display = 'block';
+    }
+    estabelecimentoOverlay.style.display = 'flex';
+  }
+  document.getElementById('btnEstabCancel').addEventListener('click', () => { estabelecimentoOverlay.style.display = 'none'; });
+  estabelecimentoOverlay.addEventListener('click', (e) => { if(e.target === estabelecimentoOverlay) estabelecimentoOverlay.style.display = 'none'; });
+
+  document.getElementById('estabBannerEditWrap').addEventListener('click', () => {
+    document.getElementById('fEstabLogo').click();
+  });
+  document.getElementById('fEstabLogo').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      novoLogoBase64 = reader.result;
+      const previewImg = document.getElementById('estabBannerEditImg');
+      const previewVazio = document.getElementById('estabBannerEditVazio');
+      previewImg.src = novoLogoBase64;
+      previewImg.style.display = 'block';
+      previewVazio.style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+  });
+
+  document.getElementById('fEstabCorPicker').addEventListener('input', (e) => {
+    document.getElementById('fEstabCor').value = e.target.value;
+  });
+  document.getElementById('fEstabCor').addEventListener('input', (e) => {
+    if(/^#[0-9A-Fa-f]{6}$/.test(e.target.value)){
+      document.getElementById('fEstabCorPicker').value = e.target.value;
+    }
+  });
+  document.getElementById('btnRestaurarCor').addEventListener('click', () => {
+    document.getElementById('fEstabCor').value = CO_PADRAO;
+    document.getElementById('fEstabCorPicker').value = CO_PADRAO;
+  });
+
+  document.getElementById('btnEstabSave').addEventListener('click', async () => {
+    let corDigitada = document.getElementById('fEstabCor').value.trim();
+    if(!/^#[0-9A-Fa-f]{6}$/.test(corDigitada)) corDigitada = CO_PADRAO;
+
+    estabelecimento = {
+      nome: document.getElementById('fEstabNome').value.trim(),
+      endereco: document.getElementById('fEstabEndereco').value.trim(),
+      cep: document.getElementById('fEstabCep').value.trim(),
+      telefone: document.getElementById('fEstabTelefone').value.trim(),
+      logo: novoLogoBase64 || (estabelecimento ? estabelecimento.logo : null),
+      corHex: corDigitada,
+    };
+    await dbPut('config', { ...estabelecimento, id: 'estabelecimento' });
+    aplicarCorPersonalizada();
+    renderBanner();
+    estabelecimentoOverlay.style.display = 'none';
+    showToast('Dados do estabelecimento salvos.');
+  });
+
+  document.getElementById('gearComoUsar').addEventListener('click', () => {
+    gearMenuOverlay.style.display = 'none';
+    howToOverlay.style.display = 'flex';
+  });
+  document.getElementById('btnHowToClose').addEventListener('click', () => { howToOverlay.style.display = 'none'; });
+  howToOverlay.addEventListener('click', (e) => { if(e.target === howToOverlay) howToOverlay.style.display = 'none'; });
+
+  document.getElementById('gearBackup').addEventListener('click', () => {
+    gearMenuOverlay.style.display = 'none';
+    backupOverlay.style.display = 'flex';
+  });
+  document.getElementById('btnBackupClose').addEventListener('click', () => { backupOverlay.style.display = 'none'; });
+  backupOverlay.addEventListener('click', (e) => { if(e.target === backupOverlay) backupOverlay.style.display = 'none'; });
+
+  function nomeArquivoBackup(){
+    const d = new Date();
+    const dia = String(d.getDate()).padStart(2, '0');
+    const mes = String(d.getMonth() + 1).padStart(2, '0');
+    const ano = d.getFullYear();
+    return `${dia}-${mes}-${ano}-agenda-medica-backup.json`;
+  }
+
+  document.getElementById('btnExportar').addEventListener('click', async () => {
+    const dadosBackup = {
+      versaoBackup: 2,
+      exportadoEm: new Date().toISOString(),
+      compromissos: items,
+      perfil: perfil,
+      familiares: familiares,
+      estabelecimento: estabelecimento,
+    };
+    const conteudo = JSON.stringify(dadosBackup, null, 2);
+    const nomeArquivo = nomeArquivoBackup();
+    const blob = new Blob([conteudo], { type: 'application/json' });
+    const arquivo = new File([blob], nomeArquivo, { type: 'application/json' });
+
+    if(navigator.canShare && navigator.canShare({ files: [arquivo] })){
+      try {
+        await navigator.share({ files: [arquivo], title: 'Backup Odonto Agenda' });
+        backupOverlay.style.display = 'none';
+        showToast('Backup exportado com sucesso.');
+        return;
+      } catch(e){ /* usuário cancelou, cai no download */ }
+    }
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = nomeArquivo;
+    a.click();
+    URL.revokeObjectURL(url);
+    backupOverlay.style.display = 'none';
+    showToast('Backup exportado com sucesso.');
+  });
+
+  document.getElementById('btnImportar').addEventListener('click', () => {
+    document.getElementById('fImportarArquivo').click();
+  });
+
+  document.getElementById('fImportarArquivo').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = async () => {
+      try {
+        const dados = JSON.parse(reader.result);
+        if(!dados || !Array.isArray(dados.compromissos)){
+          showToast('Arquivo de backup inválido.');
+          return;
+        }
+
+        for(const it of items){ await dbDelete('compromissos', it.id); }
+        for(const f of familiares){ await dbDelete('familiares', f.id); }
+
+        for(const it of dados.compromissos){ await dbPut('compromissos', it); }
+        for(const f of (dados.familiares || [])){ await dbPut('familiares', f); }
+        if(dados.perfil){ await dbPut('perfil', dados.perfil); }
+        if(dados.estabelecimento){ await dbPut('config', { ...dados.estabelecimento, id: 'estabelecimento' }); }
+
+        items = dados.compromissos;
+        familiares = dados.familiares || [];
+        perfil = dados.perfil || null;
+        if(dados.estabelecimento) estabelecimento = dados.estabelecimento;
+        currentPersonId = 'titular';
+        familySection.style.display = 'block';
+        btnVoltar.style.display = 'none';
+
+        aplicarCorPersonalizada();
+        renderBanner();
+        renderPeopleRow();
+        renderProfileBar();
+        render();
+        backupOverlay.style.display = 'none';
+        showToast('Backup restaurado com sucesso.');
+      } catch(err){
+        showToast('Não foi possível ler esse arquivo.');
+      }
+      e.target.value = '';
+    };
+    reader.readAsText(file);
+  });
+
+  /* ---------- Família (chips + cadastro + troca de contexto) ---------- */
+  const familyOverlay = document.getElementById('familyOverlay');
+  const familySection = document.getElementById('familySection');
+  const peopleRow = document.getElementById('peopleRow');
+  const btnVoltar = document.getElementById('btnVoltar');
+  let novaFotoFamiliarBase64 = null;
+
+  function renderPeopleRow(){
+    peopleRow.innerHTML = '<button class="person-chip add" id="addPersonBtn">+</button><button class="person-chip" id="perfilChip">Perfil</button>';
+    familiares.forEach(f => {
+      const btn = document.createElement('button');
+      btn.className = 'person-chip' + (currentPersonId === f.id ? ' active' : '');
+      btn.textContent = f.nome;
+      btn.addEventListener('click', () => switchPerson(f.id));
+      peopleRow.appendChild(btn);
+    });
+    document.getElementById('addPersonBtn').addEventListener('click', openFamilyOverlay);
+    document.getElementById('perfilChip').addEventListener('click', abrirPerfilPessoal);
+  }
+
+  function switchPerson(id){
+    currentPersonId = id;
+    const nomeEl = document.getElementById('familiarNomeAtual');
+    const familiarBar = document.getElementById('familiarBar');
+    if(id === 'titular'){
+      familySection.style.display = 'block';
+      familiarBar.style.display = 'none';
+    } else {
+      familySection.style.display = 'none';
+      const f = familiares.find(f => f.id === id);
+      nomeEl.textContent = f ? f.nome : '';
+      familiarBar.style.display = 'flex';
+    }
+    currentTab = 'proximos';
+    document.querySelectorAll('.tab').forEach(b => b.classList.toggle('active', b.dataset.tab === 'proximos'));
+    renderProfileBar();
+    render();
+  }
+
+  btnVoltar.addEventListener('click', () => switchPerson('titular'));
+
+  function openFamilyOverlay(){
+    novaFotoFamiliarBase64 = null;
+    document.getElementById('fFamNome').value = '';
+    document.getElementById('famAvatarLargeImg').style.display = 'none';
+    document.getElementById('famAvatarLargeInitial').style.display = 'block';
+    document.getElementById('famAvatarLargeInitial').textContent = '?';
+    familyOverlay.style.display = 'flex';
+  }
+
+  document.getElementById('btnFamCancel').addEventListener('click', () => { familyOverlay.style.display = 'none'; });
+  familyOverlay.addEventListener('click', (e) => { if(e.target === familyOverlay) familyOverlay.style.display = 'none'; });
+
+  document.getElementById('fFamFoto').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      novaFotoFamiliarBase64 = reader.result;
+      const previewImg = document.getElementById('famAvatarLargeImg');
+      const previewInitial = document.getElementById('famAvatarLargeInitial');
+      previewImg.src = novaFotoFamiliarBase64;
+      previewImg.style.display = 'block';
+      previewInitial.style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+  });
+
+  document.getElementById('btnFamSave').addEventListener('click', async () => {
+    const nome = document.getElementById('fFamNome').value.trim();
+    if(!nome){
+      showToast('Informe um nome.');
+      return;
+    }
+    const novoFamiliar = {
+      id: 'fam-' + Date.now().toString(36) + Math.random().toString(36).slice(2,6),
+      nome,
+      foto: novaFotoFamiliarBase64 || null,
+      userId: generateUserId(),
+    };
+    familiares.push(novoFamiliar);
+    await dbPut('familiares', novoFamiliar);
+    renderPeopleRow();
+    familyOverlay.style.display = 'none';
+  });
+
+  /* ---------- Compartilhar como PNG (formato A4, com paginação) ---------- */
+  function showToast(msg){
+    const toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2500);
+  }
+
+  const PAGE_W = 794;   // A4 a 96dpi
+  const PAGE_H = 1123;
+  const MARGIN = 40;
+  const ROW_H = 100;
+
+  // Logo: se existir o arquivo imagem/logo.png, ele é usado.
+  // Se não existir, desenharLogo() desenha um ícone provisório no lugar.
+  // Quando a logo oficial estiver pronta, basta colocar o arquivo em imagem/logo.png — nada aqui precisa mudar.
+  let logoImg = null;
+  function carregarLogo(){
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => { logoImg = img; resolve(); };
+      img.onerror = () => { logoImg = null; resolve(); };
+      img.src = 'imagem/logo.png';
+    });
+  }
+
+  function desenharLogo(ctx){
+    const tam = 56;
+    const x = PAGE_W - MARGIN - tam;
+    const y = MARGIN - 20;
+
+    if(logoImg){
+      ctx.drawImage(logoImg, x, y, tam, tam);
+      return;
+    }
+
+    // Ícone provisório: cruz médica em círculo
+    const cx = x + tam / 2;
+    const cy = y + tam / 2;
+    ctx.fillStyle = hexParaClaro(corPrimaria());
+    ctx.beginPath();
+    ctx.arc(cx, cy, tam / 2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = corPrimaria();
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.fillStyle = corPrimaria();
+    const braco = tam * 0.16;
+    const comp = tam * 0.5;
+    ctx.fillRect(cx - braco / 2, cy - comp / 2, braco, comp);
+    ctx.fillRect(cx - comp / 2, cy - braco / 2, comp, braco);
+  }
+
+  function drawItemRow(ctx, it, x, y, width){
+    const h = ROW_H - 14;
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(x, y, width, h);
+    ctx.strokeStyle = '#DCE3DF';
+    ctx.strokeRect(x, y, width, h);
+
+    ctx.fillStyle = '#1B2A26';
+    ctx.font = '600 18px Arial';
+    ctx.fillText((it.especial ? '★ ' : '') + it.titulo, x + 16, y + 28);
+
+    ctx.fillStyle = '#5C6E68';
+    ctx.font = '14px Arial';
+    ctx.fillText(it.local || '', x + 16, y + 50);
+
+    ctx.fillStyle = corPrimaria();
+    ctx.font = '600 15px Arial';
+    const dataTxt = diaSemana(it.data) + ', ' + formatDate(it.data) + (it.hora ? ' às ' + it.hora : '');
+    ctx.fillText(dataTxt + '   [' + tipoLabel(it.tipo) + ']', x + 16, y + 72);
+  }
+
+  function buildPages(itemsList, titulo){
+    const pages = [];
+    let idx = 0;
+    do {
+      const canvas = document.createElement('canvas');
+      canvas.width = PAGE_W;
+      canvas.height = PAGE_H;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillRect(0, 0, PAGE_W, PAGE_H);
+
+      let y = MARGIN;
+      desenharLogo(ctx);
+      ctx.fillStyle = corPrimaria();
+      ctx.font = '600 26px Georgia, serif';
+      ctx.fillText('Odonto Agenda', MARGIN, y);
+      y += 30;
+
+      const pAtual = getPerfilAtual();
+      if(pAtual && pAtual.nome){
+        ctx.fillStyle = '#1B2A26';
+        ctx.font = '600 16px Arial';
+        ctx.fillText(pAtual.nome + (pAtual.userId ? '  ·  ID: ' + pAtual.userId : ''), MARGIN, y);
+        y += 22;
+      }
+
+      ctx.fillStyle = '#5C6E68';
+      ctx.font = '13px Arial';
+      ctx.fillText(titulo, MARGIN, y);
+      y += 26;
+
+      const limiteY = PAGE_H - MARGIN - 30;
+      while(idx < itemsList.length && (y + ROW_H) <= limiteY){
+        drawItemRow(ctx, itemsList[idx], MARGIN, y, PAGE_W - MARGIN * 2);
+        y += ROW_H;
+        idx++;
+      }
+
+      ctx.fillStyle = '#5C6E68';
+      ctx.font = '12px Arial';
+      ctx.fillText('Página ' + (pages.length + 1), PAGE_W - MARGIN - 70, PAGE_H - 20);
+
+      pages.push(canvas);
+    } while(idx < itemsList.length);
+    return pages;
+  }
+
+  async function shareCanvases(canvasList, baseName){
+    const blobs = await Promise.all(canvasList.map(c => new Promise(res => c.toBlob(res, 'image/png'))));
+    const files = blobs.map((b, i) => new File([b], `${baseName}-pagina-${i + 1}.png`, { type: 'image/png' }));
+
+    if(navigator.canShare && navigator.canShare({ files })){
+      try {
+        await navigator.share({ files, title: baseName });
+        return;
+      } catch(e){ /* usuário cancelou, cai no download */ }
+    }
+    files.forEach((f, i) => {
+      setTimeout(() => {
+        const url = URL.createObjectURL(f);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = f.name;
+        a.click();
+        URL.revokeObjectURL(url);
+      }, i * 300);
+    });
+  }
+
+  document.getElementById('fabShare').addEventListener('click', async () => {
+    const proximos = items.filter(i => !i.done).sort((a,b) => new Date(a.data+'T'+(a.hora||'00:00')) - new Date(b.data+'T'+(b.hora||'00:00')));
+    if(proximos.length === 0){
+      showToast('Não há compromissos para compartilhar.');
+      return;
+    }
+    const pages = buildPages(proximos, 'Meus Atendimentos');
+    await shareCanvases(pages, 'meus-compromissos');
+  });
+
+  window.shareItem = async function(id){
+    const it = items.find(i => i.id === id);
+    if(!it) return;
+    const pages = buildPages([it], 'Compromisso');
+    const nomeArquivo = 'compromisso-' + it.titulo.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    await shareCanvases(pages, nomeArquivo);
+  };
+
+  /* ==================================================================
+     ===== INÍCIO — BLOCO DE NOTIFICAÇÕES (só ativa em app Android nativo) =====
+     ==================================================================
+     Este bloco NÃO faz nada rodando no navegador ou como PWA — nesse caso
+     window.AndroidNotificacoes não existe, e as funções abaixo simplesmente
+     não fazem nada (sem erro, sem interferir no resto do app).
+
+     Ele só "acorda" quando o app estiver empacotado como app Android nativo
+     (via Android Studio), com uma ponte de código Java/Kotlin que exponha
+     window.AndroidNotificacoes com os métodos:
+       - agendarNotificacao(id, titulo, corpo, timestampEmMilissegundos)
+       - cancelarNotificacao(id)
+     Essa ponte usa o AlarmManager do Android para disparar a notificação
+     no horário certo, mesmo com o app fechado.
+
+     Nada nesse bloco precisa ser alterado no restante do código — ele é
+     chamado automaticamente ao salvar e ao excluir um compromisso. */
+
+  function agendarNotificacao(it){
+    if(typeof window.AndroidNotificacoes === 'undefined') return;
+    try {
+      const dataHora = new Date(it.data + 'T' + (it.hora || '08:00') + ':00');
+      const umDiaAntes = new Date(dataHora.getTime() - 24 * 60 * 60 * 1000);
+      if(umDiaAntes.getTime() <= Date.now()) return; // já passou, não agenda
+
+      const titulo = 'Odonto Agenda';
+      const corpo = it.titulo + (it.hora ? ' às ' + it.hora : '') + (it.local ? ' — ' + it.local : '');
+      window.AndroidNotificacoes.agendarNotificacao(it.id, titulo, corpo, umDiaAntes.getTime());
+    } catch(e){
+      console.warn('Não foi possível agendar notificação:', e);
+    }
+  }
+
+  function cancelarNotificacao(id){
+    if(typeof window.AndroidNotificacoes === 'undefined') return;
+    try {
+      window.AndroidNotificacoes.cancelarNotificacao(id);
+    } catch(e){ /* silencioso */ }
+  }
+  /* ===== FIM — BLOCO DE NOTIFICAÇÕES ===== */
+
+  /* ---------- Inicialização ---------- */
+  async function init(){
+    fillTimeSelects();
+    fillDateSelects();
+    fillWeekdaySelects();
+    carregarLogo();
+    dbInstance = await openDB();
+    items = await dbGetAll('compromissos');
+    perfil = await dbGet('perfil', 1) || null;
+    familiares = await dbGetAll('familiares');
+
+    const estabConfig = await dbGet('config', 'estabelecimento');
+    if(estabConfig) estabelecimento = estabConfig;
+    aplicarCorPersonalizada();
+    renderBanner();
+
+    renderPeopleRow();
+    renderProfileBar();
+    render();
+  }
+  init();
+</script>
+
+
+<script>
+/* ===== AVISO — INTERNET 🌐 ===== */
+
+function verificarInternet() {
+
+  let aviso =
+    document.getElementById("aviso-internet");
+
+  if (!navigator.onLine) {
+
+    if (!aviso) {
+
+      aviso =
+        document.createElement("p");
+
+      aviso.id =
+        "aviso-internet";
+
+/* ===== Posição na tela ===== */
+      aviso.style.position = "fixed";
+aviso.style.bottom = "0px";  /* ===== margem rdapé ===== */
+aviso.style.left = "0";
+aviso.style.width = "100%";
+aviso.style.textAlign = "center";
+aviso.style.color = "#3A2530";
+aviso.style.fontFamily = "Arial, sans-serif";
+aviso.style.fontSize = "13px";
+aviso.style.lineHeight = "1.5";
+
+      const local =
+        document.getElementById(
+          "local-resumido"
+        );
+
+      if (local) {
+
+        local.parentNode.insertBefore(
+          aviso,
+          local
+        );
+
+      } else {
+
+        document.body.appendChild(
+          aviso
+        );
+
+      }
+
+    }
+
+/* ===== Mensagem  ===== */
+  aviso.innerHTML =
+  "🌐 Você está sem internet<br>" +
+  "O app funciona normal";
+  /* ===== Mensagem  ===== */
+
+  } else {
+
+    if (aviso) {
+      aviso.remove();
+    }
+
+  }
+
+}
+
+/* ===== VERIFICAR AO CARREGAR ===== */
+
+window.addEventListener(
+  "load",
+  verificarInternet
+);
+
+/* ===== INTERNET CAIU ===== */
+
+window.addEventListener(
+  "offline",
+  verificarInternet
+);
+
+/* ===== INTERNET VOLTOU ===== */
+
+window.addEventListener(
+  "online",
+  verificarInternet
+);
+
+/* ===== FIM — AVISO INTERNET 🌐 ===== */
+</script>
+
+
+
+
+
+
+</body>
+</html>
