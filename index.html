@@ -255,6 +255,13 @@
     font-size:13px;
     color:var(--teal);
   }
+  .frase-institucional{
+    text-align:center;
+    font-size:13px;
+    font-style:italic;
+    color:var(--ink-soft);
+    margin:24px 0 8px;
+  }
 
   /* ===== ABAS (Próximos / Concluídos / Pendentes / Prioridades) ===== */
   .tabs{
@@ -693,6 +700,7 @@
   </div>
 
   <div id="list"></div>
+  <p class="frase-institucional" id="fraseInstitucional" style="display:none;">Sua clínica mais perto de você!</p>
 </div>
 
 <div class="fab-group">
@@ -1731,7 +1739,7 @@
     const canvas = document.createElement('canvas');
     const largura = 720;
     const alturaBanner = Math.round(largura * 9 / 16);
-    const alturaTexto = 140;
+    const alturaTexto = 116;
     canvas.width = largura;
     canvas.height = alturaBanner + alturaTexto;
     const ctx = canvas.getContext('2d');
@@ -1747,22 +1755,13 @@
     }
 
     ctx.fillStyle = '#1B2A26';
-    ctx.font = '600 22px Arial';
-    ctx.fillText(estabelecimento.nome || '', 24, alturaBanner + 32);
+    ctx.font = '600 20px Arial';
+    ctx.fillText('Nome: ' + (estabelecimento.nome || ''), 24, alturaBanner + 30);
     ctx.fillStyle = corPrimaria();
     ctx.font = '15px Arial';
-    let yTexto = alturaBanner + 58;
-    if(estabelecimento.endereco){
-      ctx.fillText(estabelecimento.endereco, 24, yTexto);
-      yTexto += 24;
-    }
-    if(estabelecimento.cep){
-      ctx.fillText('CEP: ' + estabelecimento.cep, 24, yTexto);
-      yTexto += 24;
-    }
-    if(estabelecimento.telefone){
-      ctx.fillText('Tel: ' + estabelecimento.telefone, 24, yTexto);
-    }
+    const enderecoLinha = 'Endereço: ' + (estabelecimento.endereco || '') + (estabelecimento.cep ? ' CEP: ' + estabelecimento.cep : '');
+    ctx.fillText(enderecoLinha, 24, alturaBanner + 60);
+    ctx.fillText('Telefone: ' + (estabelecimento.telefone || ''), 24, alturaBanner + 88);
 
     canvas.toBlob(async (blob) => {
       const nomeArquivo = 'clinica-' + (estabelecimento.nome || 'odonto-agenda').trim().toLowerCase().replace(/[^a-z0-9]+/g, '-') + '.png';
@@ -1881,8 +1880,8 @@
     const d = new Date();
     const dia = String(d.getDate()).padStart(2, '0');
     const mes = String(d.getMonth() + 1).padStart(2, '0');
-    const ano = d.getFullYear();
-    return `${dia}-${mes}-${ano}-agenda-medica-backup.json`;
+    const ano = String(d.getFullYear()).slice(-2);
+    return `${dia}-${mes}-${ano}-Odonto-Agenda.json`;
   }
 
   document.getElementById('btnExportar').addEventListener('click', async () => {
@@ -1988,14 +1987,17 @@
     currentPersonId = id;
     const nomeEl = document.getElementById('familiarNomeAtual');
     const familiarBar = document.getElementById('familiarBar');
+    const frase = document.getElementById('fraseInstitucional');
     if(id === 'titular'){
       familySection.style.display = 'block';
       familiarBar.style.display = 'none';
+      frase.style.display = 'block';
     } else {
       familySection.style.display = 'none';
       const f = familiares.find(f => f.id === id);
       nomeEl.textContent = f ? f.nome : '';
       familiarBar.style.display = 'flex';
+      frase.style.display = 'none';
     }
     currentTab = 'proximos';
     document.querySelectorAll('.tab').forEach(b => b.classList.toggle('active', b.dataset.tab === 'proximos'));
@@ -2270,107 +2272,10 @@
 
     renderPeopleRow();
     renderProfileBar();
+    document.getElementById('fraseInstitucional').style.display = currentPersonId === 'titular' ? 'block' : 'none';
     render();
   }
   init();
 </script>
-
-
-<script>
-/* ===== AVISO — INTERNET 🌐 ===== */
-
-function verificarInternet() {
-
-  let aviso =
-    document.getElementById("aviso-internet");
-
-  if (!navigator.onLine) {
-
-    if (!aviso) {
-
-      aviso =
-        document.createElement("p");
-
-      aviso.id =
-        "aviso-internet";
-
-/* ===== Posição na tela ===== */
-      aviso.style.position = "fixed";
-aviso.style.bottom = "0px";  /* ===== margem rdapé ===== */
-aviso.style.left = "0";
-aviso.style.width = "100%";
-aviso.style.textAlign = "center";
-aviso.style.color = "#3A2530";
-aviso.style.fontFamily = "Arial, sans-serif";
-aviso.style.fontSize = "13px";
-aviso.style.lineHeight = "1.5";
-
-      const local =
-        document.getElementById(
-          "local-resumido"
-        );
-
-      if (local) {
-
-        local.parentNode.insertBefore(
-          aviso,
-          local
-        );
-
-      } else {
-
-        document.body.appendChild(
-          aviso
-        );
-
-      }
-
-    }
-
-/* ===== Mensagem  ===== */
-  aviso.innerHTML =
-  "🌐 Você está sem internet<br>" +
-  "O app funciona normal";
-  /* ===== Mensagem  ===== */
-
-  } else {
-
-    if (aviso) {
-      aviso.remove();
-    }
-
-  }
-
-}
-
-/* ===== VERIFICAR AO CARREGAR ===== */
-
-window.addEventListener(
-  "load",
-  verificarInternet
-);
-
-/* ===== INTERNET CAIU ===== */
-
-window.addEventListener(
-  "offline",
-  verificarInternet
-);
-
-/* ===== INTERNET VOLTOU ===== */
-
-window.addEventListener(
-  "online",
-  verificarInternet
-);
-
-/* ===== FIM — AVISO INTERNET 🌐 ===== */
-</script>
-
-
-
-
-
-
 </body>
 </html>
