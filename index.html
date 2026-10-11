@@ -1388,8 +1388,8 @@
 
   function renderProfileBar(){
     const chip = document.getElementById('perfilChip');
-    if(chip && currentPersonId === 'titular'){
-      chip.textContent = 'Perfil';
+    if(chip){
+      chip.textContent = (perfil && perfil.nome) ? perfil.nome : 'Perfil';
     }
   }
 
@@ -1706,6 +1706,19 @@
     return 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(partes);
   }
 
+  // Formatação só para exibição/compartilhamento — o campo de cadastro continua livre.
+  function formatarCep(cep){
+    const d = (cep || '').replace(/\D/g, '');
+    if(d.length !== 8) return cep || '';
+    return d.slice(0, 5) + '-' + d.slice(5);
+  }
+  function formatarTelefone(tel){
+    const d = (tel || '').replace(/\D/g, '');
+    if(d.length === 11) return `(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7)}`;
+    if(d.length === 10) return `(${d.slice(0,2)}) ${d.slice(2,6)}-${d.slice(6)}`;
+    return tel || '';
+  }
+
   function abrirEstabInfo(){
     const vazio = document.getElementById('estabInfoBannerVazio');
     const img = document.getElementById('estabInfoBannerImg');
@@ -1720,11 +1733,11 @@
     document.getElementById('estabInfoNome').textContent = estabelecimento.nome || '';
     const linkMaps = linkGoogleMaps();
     const enderecoEl = document.getElementById('estabInfoEndereco');
-    const enderecoTexto = [estabelecimento.endereco, estabelecimento.cep].filter(Boolean).join(' — ');
+    const enderecoTexto = [estabelecimento.endereco, formatarCep(estabelecimento.cep)].filter(Boolean).join(' — ');
     enderecoEl.innerHTML = linkMaps
       ? `<a href="${linkMaps}" target="_blank" style="color:var(--teal);">${escapeHtml(enderecoTexto)} · ver no mapa</a>`
       : escapeHtml(enderecoTexto);
-    document.getElementById('estabInfoTelefone').textContent = estabelecimento.telefone || '';
+    document.getElementById('estabInfoTelefone').textContent = formatarTelefone(estabelecimento.telefone);
     estabInfoOverlay.style.display = 'flex';
   }
   document.getElementById('btnEstabInfoClose').addEventListener('click', () => { estabInfoOverlay.style.display = 'none'; });
@@ -1756,12 +1769,12 @@
 
     ctx.fillStyle = '#1B2A26';
     ctx.font = '600 20px Arial';
-    ctx.fillText('Nome: ' + (estabelecimento.nome || ''), 24, alturaBanner + 30);
+    ctx.fillText('Clínica: ' + (estabelecimento.nome || ''), 24, alturaBanner + 30);
     ctx.fillStyle = corPrimaria();
     ctx.font = '15px Arial';
-    const enderecoLinha = 'Endereço: ' + (estabelecimento.endereco || '') + (estabelecimento.cep ? ' CEP: ' + estabelecimento.cep : '');
+    const enderecoLinha = 'Endereço: ' + (estabelecimento.endereco || '') + (estabelecimento.cep ? ' CEP: ' + formatarCep(estabelecimento.cep) : '');
     ctx.fillText(enderecoLinha, 24, alturaBanner + 60);
-    ctx.fillText('Telefone: ' + (estabelecimento.telefone || ''), 24, alturaBanner + 88);
+    ctx.fillText('Telefone: ' + formatarTelefone(estabelecimento.telefone), 24, alturaBanner + 88);
 
     canvas.toBlob(async (blob) => {
       const nomeArquivo = 'clinica-' + (estabelecimento.nome || 'odonto-agenda').trim().toLowerCase().replace(/[^a-z0-9]+/g, '-') + '.png';
@@ -1946,7 +1959,7 @@
         if(dados.estabelecimento) estabelecimento = dados.estabelecimento;
         currentPersonId = 'titular';
         familySection.style.display = 'block';
-        btnVoltar.style.display = 'none';
+        document.getElementById('familiarBar').style.display = 'none';
 
         aplicarCorPersonalizada();
         renderBanner();
@@ -2065,12 +2078,22 @@
   const MARGIN = 40;
   const ROW_H = 100;
 
-  // Logo: se existir o arquivo imagem/logo.png, ele é usado.
-  // Se não existir, desenharLogo() desenha um ícone provisório no lugar.
-  // Quando a logo oficial estiver pronta, basta colocar o arquivo em imagem/logo.png — nada aqui precisa mudar.
+  // Logo: cole aqui o código base64 da logo (ex: "data:image/png;base64,iVBOR...").
+  // Com a constante preenchida, ela é usada direto, sem depender de arquivo externo.
+  // Deixando vazia (como está), o app tenta carregar imagem/logo.png; se também não
+  // existir, desenharLogo() desenha um ícone provisório no lugar. Nada mais precisa mudar.
+  const LOGO_BASE64 = '';
+
   let logoImg = null;
   function carregarLogo(){
     return new Promise((resolve) => {
+      if(LOGO_BASE64){
+        const img = new Image();
+        img.onload = () => { logoImg = img; resolve(); };
+        img.onerror = () => { logoImg = null; resolve(); };
+        img.src = LOGO_BASE64;
+        return;
+      }
       const img = new Image();
       img.onload = () => { logoImg = img; resolve(); };
       img.onerror = () => { logoImg = null; resolve(); };
@@ -2213,6 +2236,7 @@
     await shareCanvases(pages, nomeArquivo);
   };
 
+
   /* ==================================================================
      ===== INÍCIO — BLOCO DE NOTIFICAÇÕES (só ativa em app Android nativo) =====
      ==================================================================
@@ -2277,5 +2301,104 @@
   }
   init();
 </script>
+
+
+
+
+
+
+
+<script>
+/* ===== AVISO — INTERNET 🌐 ===== */
+
+function verificarInternet() {
+
+  let aviso =
+    document.getElementById("aviso-internet");
+
+  if (!navigator.onLine) {
+
+    if (!aviso) {
+
+      aviso =
+        document.createElement("p");
+
+      aviso.id =
+        "aviso-internet";
+
+/* ===== Posição na tela ===== */
+      aviso.style.position = "fixed";
+aviso.style.bottom = "0px";  /* ===== margem rdapé ===== */
+aviso.style.left = "0";
+aviso.style.width = "100%";
+aviso.style.textAlign = "center";
+aviso.style.color = "#3A2530";
+aviso.style.fontFamily = "Arial, sans-serif";
+aviso.style.fontSize = "13px";
+aviso.style.lineHeight = "1.5";
+
+      const local =
+        document.getElementById(
+          "local-resumido"
+        );
+
+      if (local) {
+
+        local.parentNode.insertBefore(
+          aviso,
+          local
+        );
+
+      } else {
+
+        document.body.appendChild(
+          aviso
+        );
+
+      }
+
+    }
+
+/* ===== Mensagem  ===== */
+  aviso.innerHTML =
+  "🌐 Você está sem internet<br>" +
+  "O app funciona normal";
+  /* ===== Mensagem  ===== */
+
+  } else {
+
+    if (aviso) {
+      aviso.remove();
+    }
+
+  }
+
+}
+
+/* ===== VERIFICAR AO CARREGAR ===== */
+
+window.addEventListener(
+  "load",
+  verificarInternet
+);
+
+/* ===== INTERNET CAIU ===== */
+
+window.addEventListener(
+  "offline",
+  verificarInternet
+);
+
+/* ===== INTERNET VOLTOU ===== */
+
+window.addEventListener(
+  "online",
+  verificarInternet
+);
+
+/* ===== FIM — AVISO INTERNET 🌐 ===== */
+</script>
+
+
 </body>
 </html>
