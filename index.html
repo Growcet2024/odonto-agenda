@@ -945,7 +945,7 @@
   <div class="sheet">
     <h2>Como usar o Odonto Agenda</h2>
     <div class="how-to-content">
-      <p><strong>Funciona sem internet</strong><br>O app funciona 100% offline: você pode cadastrar e editar seus compromissos sem conexão com a internet. Todos os registros ficam armazenados diretamente neste celular, sem serem enviados ou salvos na internet. A conexão só é necessária para abrir o app pela primeira vez e para exportar ou importar backups.</p>
+      <p><strong>Funciona offline</strong><br>Este app funciona 100% offline: você pode cadastrar, editar e consultar seus compromissos mesmo sem internet. A conexão só é necessária para abrir o app pela primeira vez e para enviar/receber backups.</p>
       <p><strong>Adicionar um atendimento</strong><br>Toque no botão "+" e preencha título, tipo de serviço, data, hora e local. Salve e pronto.</p>
       <p><strong>Organizando com as abas</strong><br>
       • Próximos: o que ainda está por vir<br>
@@ -2082,14 +2082,7 @@
   // Com a constante preenchida, ela é usada direto, sem depender de arquivo externo.
   // Deixando vazia (como está), o app tenta carregar imagem/logo.png; se também não
   // existir, desenharLogo() desenha um ícone provisório no lugar. Nada mais precisa mudar.
-  
-  const LOGO_BASE64 = 
-
-  "data:image/png;base64,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";
-
-  // Colar acima o codigo sa imagem com as aspas
-
-
+  const LOGO_BASE64 = '';
 
   let logoImg = null;
   function carregarLogo(){
@@ -2178,7 +2171,9 @@
       if(pAtual && pAtual.nome){
         ctx.fillStyle = '#1B2A26';
         ctx.font = '600 16px Arial';
-        ctx.fillText(pAtual.nome + (pAtual.userId ? '  ·  ID: ' + pAtual.userId : ''), MARGIN, y);
+        const hoje = new Date();
+        const dataGeracao = String(hoje.getDate()).padStart(2,'0') + '/' + String(hoje.getMonth()+1).padStart(2,'0') + '/' + hoje.getFullYear();
+        ctx.fillText(pAtual.nome + (pAtual.userId ? '  ·  ID: ' + pAtual.userId : '') + '  ·  ' + dataGeracao, MARGIN, y);
         y += 22;
       }
 
