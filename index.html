@@ -2111,7 +2111,7 @@
       return;
     }
 
-    // Ícone provisório: cruz médica em círculo
+    // Ícone provisório: dente estilizado em círculo, na cor da clínica
     const cx = x + tam / 2;
     const cy = y + tam / 2;
     ctx.fillStyle = hexParaClaro(corPrimaria());
@@ -2121,11 +2121,22 @@
     ctx.strokeStyle = corPrimaria();
     ctx.lineWidth = 1.5;
     ctx.stroke();
+
+    const w = tam * 0.44;
+    const h = tam * 0.5;
+    const topY = cy - h * 0.55;
+    ctx.beginPath();
+    ctx.moveTo(cx - w * 0.5, topY + h * 0.15);
+    ctx.bezierCurveTo(cx - w * 0.5, topY, cx - w * 0.2, topY - h * 0.1, cx, topY - h * 0.1);
+    ctx.bezierCurveTo(cx + w * 0.2, topY - h * 0.1, cx + w * 0.5, topY, cx + w * 0.5, topY + h * 0.15);
+    ctx.bezierCurveTo(cx + w * 0.5, topY + h * 0.4, cx + w * 0.3, topY + h * 0.5, cx + w * 0.28, topY + h * 0.65);
+    ctx.bezierCurveTo(cx + w * 0.25, cy + h * 0.5, cx + w * 0.12, cy + h * 0.5, cx + w * 0.08, topY + h * 0.75);
+    ctx.bezierCurveTo(cx + w * 0.02, topY + h * 0.65, cx - w * 0.02, topY + h * 0.65, cx - w * 0.08, topY + h * 0.75);
+    ctx.bezierCurveTo(cx - w * 0.12, cy + h * 0.5, cx - w * 0.25, cy + h * 0.5, cx - w * 0.28, topY + h * 0.65);
+    ctx.bezierCurveTo(cx - w * 0.3, topY + h * 0.5, cx - w * 0.5, topY + h * 0.4, cx - w * 0.5, topY + h * 0.15);
+    ctx.closePath();
     ctx.fillStyle = corPrimaria();
-    const braco = tam * 0.16;
-    const comp = tam * 0.5;
-    ctx.fillRect(cx - braco / 2, cy - comp / 2, braco, comp);
-    ctx.fillRect(cx - comp / 2, cy - braco / 2, comp, braco);
+    ctx.fill();
   }
 
   function drawItemRow(ctx, it, x, y, width){
